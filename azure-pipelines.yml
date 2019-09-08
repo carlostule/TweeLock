@@ -18,7 +18,7 @@ variables:
   environmentName: 'twee-lock'
 
   # Agent VM image name
-  vmImageName: 'ubuntu-latest'
+  vmImageName: 'macOS-10.14.6'
 
 stages:
 - stage: Build
