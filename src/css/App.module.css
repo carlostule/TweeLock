@@ -1,0 +1,163 @@
+.App {
+  text-align: center;
+}
+
+.AppLogo {
+  width: 40%;
+}
+
+.AppHeader {
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.AppLink {
+  color: #61dafb;
+}
+
+input:focus {
+  outline: none;
+}
+
+.rowLogo {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  padding: 5%;
+  align-items: center;
+  justify-content: center;
+}
+
+.rowForm {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.columnBotonLogin {
+  display: flex;
+  flex: 9;
+  flex-direction: column;
+  border: 1px solid black;
+}
+
+.columnSpace{
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  border: 1px solid black;
+}
+
+a.botonIngresar {
+  color: #DA2F47;
+  font-size: 22px;
+  font-family: 'Myriad pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 1%;
+  padding-left: 1.5%;
+  padding-right: 1.5%;
+  margin-top: 2%;
+}
+
+a.botonIngresar:hover {
+  color: #fff;
+  background-color: #DA2F47;
+  border-radius: 50px;
+  cursor: pointer;
+  padding: 1%;
+  padding-left: 1.5%;
+  padding-right: 1.5%;
+}
+
+a.botonRegistrarse {
+  color: #fff;
+  background-color: #DA2F47;
+  border-radius: 50px;
+  font-size: 22px;
+  font-family: 'Myriad pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 1%;
+  padding-left: 2%;
+  padding-right: 2%;
+  margin-top: 2%;
+}
+
+a.botonRegistrarse:hover {
+  cursor: pointer;
+}
+
+a.btnSubmit {
+  background-color: gray;
+  color: #fff;
+  border-radius: 50px;
+  font-size: 22px;
+  font-family: 'Myriad pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 1%;
+  padding-left: 3%;
+  padding-right: 3%;
+}
+
+a.btnSubmit:hover {
+  cursor: pointer;
+  color: #fff;
+  background-color: #DA2F47;
+}
+
+.contenedorSubmit {
+  margin-top: 3%;
+}
+
+.username {
+  border-radius: 50px;
+  border: 1px solid #DA2F47;
+  padding: 2%;
+  padding-left: 3%;
+  width: 50%;
+  font-size: 18px;
+  font-family: 'Myriad pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin-top: 3%;
+}
+
+.password {
+  border-radius: 50px;
+  border: 1px solid #DA2F47;
+  padding: 2%;
+  padding-left: 3%;
+  width: 50%;
+  font-size: 18px;
+  font-family: 'Myriad pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin-top: 3%;
+}
+
+.textoValidacion {
+  font-size: 22px;
+  font-family: 'Myriad pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #DA2F47;
+}
+
+.field {
+  border-radius: 50px;
+  border: 1px solid #DA2F47;
+  padding: 2%;
+  padding-left: 3%;
+  width: 50%;
+  font-size: 18px;
+  font-family: 'Myriad pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin-top: 3%;
+}
+
+.formularioRegistro {
+  border: 0px solid black;
+  padding-top: 2%;
+}
+
+.error {
+  color: #DA2F47;
+  font-size: 14px;
+  font-family: 'Myriad pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
