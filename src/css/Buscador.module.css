@@ -1,0 +1,42 @@
+.container {
+    display: flex;
+    margin: 0;
+    flex-direction: column;
+    border: 1px solid black;
+}
+
+.header {
+    background-color: #DA2F47;
+    display: flex;
+    padding: 1%;
+}
+
+.columnaLogo {
+    display: flex;
+    flex: 2;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    border: 0;
+}
+
+.imgLogo {
+    width: 70%;
+    height: 70%;
+}
+
+.columnaBuscador {
+    display: flex;
+    flex: 5;
+    align-items: center;
+    justify-content: flex-start;
+    border: 0;
+}
+
+.columnaBoton {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: flex-start;
+    border: 0;
+}
