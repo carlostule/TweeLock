@@ -10,11 +10,12 @@
     "gh-pages": "^2.1.1",
     "react": "16.10.2",
     "react-bootstrap": "^1.0.0-beta.14",
-    "react-dom": "16.10.2",
+    "react-dom": "^16.10.2",
     "react-router-dom": "^5.0.1",
     "react-scripts": "3.1.1",
     "react-tabs": "^3.0.0",
-    "react-tagsinput": "^3.19.0"
+    "react-tagsinput": "^3.19.0",
+    "twit": "^2.2.11"
   },
   "scripts": {
     "start": "react-scripts start",

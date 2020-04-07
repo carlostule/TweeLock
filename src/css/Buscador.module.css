@@ -1,14 +1,38 @@
 .container {
     display: flex;
+    flex: 1;
     margin: 0;
     flex-direction: column;
-    border: 1px solid black;
+    border: 0px solid black;
+}
+
+.contenedorAnalisis {
+    display: flex;
+    flex: 1;
+    margin: 0;
+    flex-direction: column;
+    border: 0px solid black;
 }
 
 .header {
     background-color: #DA2F47;
     display: flex;
+    flex-direction: row;
     padding: 1%;
+    flex: 1;
+    margin-right: 0px;
+    position: fixed;
+    width: 102%;
+}
+
+.body {
+    display: flex;
+    flex-direction: row;
+    padding: 1%;
+    flex: 1;
+    margin-top: 5%;
+    margin-right: 0px;
+    margin-left: 0px;
 }
 
 .columnaLogo {
@@ -39,4 +63,75 @@
     align-items: center;
     justify-content: flex-start;
     border: 0;
+}
+
+.rowTweets {
+    display: flex;
+    flex-direction: row;
+}
+
+.colSpace {
+    display: flex;
+    flex: 0.5;
+    flex-direction: column;
+}
+
+.colTweets {
+    display: flex;
+    flex: 2;
+    flex-direction: column;
+    align-items: center;
+}
+
+.buttonRegresar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: #343a40;
+    margin-right: 0px;
+    margin-left: -15px;
+    position: fixed;
+    width: 100%;
+}
+
+.tablaAnalisis {
+    margin-top: 0%;
+    margin-right: 0px;
+    margin-left: 0px;
+}
+
+.analisis {
+    margin-right: 0px;
+    margin-left: 0px;
+}
+
+p.tituloAnalisis {
+    font-size: 34px;
+    font-family: 'Myriad pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    margin-bottom: 0px;
+    color: #fff;
+}
+
+.columnaBotonRegresar {
+    justify-content: center;
+    border: 0px solid black;
+}
+
+.columnaTitulo {
+    width: 100%;
+    justify-content: center;
+    border: 0px solid black;
+}
+
+.columnaAnalisis {
+    width: 100%;
+    border: 0px solid black;
+    margin-top: 3.5%;
+    background-color: #fff;
+}
+
+.imagenAnalisis {
+    width: 100%;
+    height: 50%;
 }
