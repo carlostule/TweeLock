@@ -76,9 +76,9 @@ class Buscador extends Component {
                 count: count,
             }
 
-            axios.post('http://localhost:8000/buscarTweets', objetoUsuario)
+            axios.post('https://tweelock-api.azurewebsites.net/buscarTweets', objetoUsuario)
                 .then((res) => {
-                    console.log(res.data)
+                    console.log(JSON.stringify(res.data))
                     this.setState({ tweets: res.data })
                 }).catch((error) => {
                 this.setState({ modalError: true, mensajeError: error })
@@ -128,7 +128,7 @@ class Buscador extends Component {
         const { usuario } = this.state
         const parametrosJSON = {
             username: usuario,
-            count: 30,
+            count: 20,
         }
         console.log(parametrosJSON)
 
@@ -136,9 +136,9 @@ class Buscador extends Component {
             this.setState({ modalAviso: true })
         } else {
             this.setState({ loading: true })
-            axios.post('http://localhost:8000/buscarUsuarios', parametrosJSON)
+            axios.post('https://tweelock-api.azurewebsites.net/buscarUsuarios', parametrosJSON)
             .then((res) => {
-                // this.setState({ twitterUsers: res.data })
+                // this.setState({ twitterUsers: res.data, loading: false });
                 const usuarios = res.data
                 const arregloTemporal = []
 
@@ -149,11 +149,13 @@ class Buscador extends Component {
                         }
                     }
                 })
-                /* Quitamos valores duplicados en el arreglo */
+                // Quitamos valores duplicados en el arreglo
                 let set = new Set(arregloTemporal.map(JSON.stringify))
                 const arregloSinDuplicaciones = Array.from(set).map(JSON.parse)
 
-                this.setState({ twitterUsers: arregloSinDuplicaciones, loading: false })
+                this.setState({ twitterUsers: arregloSinDuplicaciones, loading: false });
+
+                console.log(JSON.stringify(this.state.twitterUsers));
 
             }).catch((error) => {
                 // this.setState({ modalError: true, mensajeError: error })
@@ -185,24 +187,23 @@ class Buscador extends Component {
                         <thead>
                             <tr>
                                 <td>Tweet id</td>
+                                <td>Usuario</td>
                                 <td>Texto</td>
-                                <td>Usuario id</td>
-                                <td>Fecha de creacion</td>
-                                <td># reetwets</td>
-                                <td># me gusta</td>
+                                <td>Clasificación</td>
                             </tr>
                         </thead>
                         <tbody>
-                        {(tweets.length === 0) ? null :
+                        {(tweets !== null && tweets.length === 0) ? null :
                             tweets.map((tweet) => {
+                                if (tweet === null) {
+                                    return null;
+                                } 
                                 return(
                                     <tr>
-                                        <td>{tweet.id_str}</td>
-                                        <td>{tweet.text}</td>
-                                        <td>{tweet.user.id_str}</td>
-                                        <td>{tweet.created_at}</td>
-                                        <td>{tweet.retweet_count}</td>
-                                        <td>{tweet.favorite_count}</td>
+                                        <td>{tweet.tweetId}</td>
+                                        <td>{tweet.user}</td>
+                                        <td>{tweet.msg}</td>
+                                        <td>{tweet.classification.tag_name}</td>
                                     </tr>
                                 )
                             })
@@ -237,7 +238,7 @@ class Buscador extends Component {
                                             <td>{user.name}</td>
                                             <td>{user.screen_name}</td>
                                             <td>{user.location}</td>
-                                            <td><Button variant="primary" onClick={() => this.handleAnalisis(user.name, user.screen_name, 100)}>Ver análisis</Button></td>
+                                            <td><Button variant="primary" onClick={() => this.handleAnalisis(user.name, user.screen_name, 50)}>Ver análisis</Button></td>
                                         </tr>
                                     )
                                 })
@@ -267,7 +268,7 @@ class Buscador extends Component {
                 </Row>
                 <Row className={styles.body}>
                     {
-                        (vistaAnalisis) ? this.analyticsView() : this.usersTable()
+                        vistaAnalisis ? this.analyticsView() : this.usersTable()
                     }
                 </Row>
                 <Modal show={modalAviso} onHide={this.handleClose}>
