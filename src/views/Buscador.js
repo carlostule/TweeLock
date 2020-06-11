@@ -79,7 +79,8 @@ class Buscador extends Component {
 
     handleModalBusquedasPrevias = () => {
         const { modalBusquedaPrevia } = this.state;
-        const url = 'http://localhost:8080/busquedasPrevias';
+        // const url = 'http://localhost:8080/busquedasPrevias';
+        const url = 'https://tweelock-api.azurewebsites.net/busquedasPrevias';
 
         axios.get(url).then((res) => {
             console.log(JSON.stringify(res.data));
@@ -109,8 +110,8 @@ class Buscador extends Component {
                 count: count,
             }
 
-            // axios.post('https://tweelock-api.azurewebsites.net/buscarTweets', objetoUsuario)
-            axios.post('http://localhost:8080/buscarTweets', objetoUsuario)
+            axios.post('https://tweelock-api.azurewebsites.net/buscarTweets', objetoUsuario)
+            //axios.post('http://localhost:8080/buscarTweets', objetoUsuario)
                 .then((res) => {
                     console.log(JSON.stringify(res.data))
                     this.setState({ tweets: res.data })
@@ -170,8 +171,8 @@ class Buscador extends Component {
             this.setState({ modalAviso: true })
         } else {
             this.setState({ loading: true, vistaBusquedaPrevia: false });
-            // axios.post('https://tweelock-api.azurewebsites.net/buscarUsuarios', parametrosJSON)
-            axios.post('http://localhost:8080/buscarUsuarios', parametrosJSON)
+            axios.post('https://tweelock-api.azurewebsites.net/buscarUsuarios', parametrosJSON)
+            // axios.post('http://localhost:8080/buscarUsuarios', parametrosJSON)
             .then((res) => {
                 const usuarios = res.data
                 const arregloTemporal = []
