@@ -1,0 +1,24 @@
+.containerCard {
+    display: flex;
+    flex: 1;
+    padding: 2%;
+    background: white;
+    border: 1px solid gainsboro;
+    border-radius: 20px;
+    margin-left: 10%;
+    margin-right: 10%;
+    margin-top: -4%;
+    position: relative;
+}
+
+.columnaDatos1 {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.columnaDatos2 {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
