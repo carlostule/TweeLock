@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Row, Col, Button, Modal, Form, Table, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import UserCard from '../views/components/UserCard';
+import RadarChart from '../views/components/RadarChart';
 
 import 'react-tagsinput/react-tagsinput.css';
 import styles from '../css/Buscador.module.css';
@@ -43,6 +44,41 @@ const filtroLocation = [
     'ecatepec',
 ];
 
+const palabrasViolentas = [
+    'chinga tu madre',
+    'chinguen a su madre',
+    'chingue a su madre',
+    'hasta la madre',
+    'emputado',
+    'emputada',
+    'encabronado',
+    'encabronada',
+    'pito',
+    'jodido',
+    'jodida',
+    'partir la madre',
+    'partir tu madre',
+    'putiza',
+    'puta',
+    'pendejo',
+    'pendeja',
+    'pinche',
+    'mierda',
+    'verga',
+    'ramera',
+    'cabron',
+    'culero',
+    'culera',
+    'maricon',
+    'alv',
+    'estupida',
+    'puto',
+    'culo',
+    'bastardo',
+    'hija de puta',
+    'hijo de puta',
+];
+
 class Buscador extends Component {
     constructor(props) {
         super(props)
@@ -62,6 +98,9 @@ class Buscador extends Component {
             vistaBusquedaPrevia: true,
             busquedasPrevias: [],
             ocultarFooter: false,
+            numPalabras: 0,
+            tweetsNegativos: 0,
+            tweetsPositivos: 0,
         }
     }
 
@@ -113,8 +152,9 @@ class Buscador extends Component {
             axios.post('https://tweelock-api.azurewebsites.net/buscarTweets', objetoUsuario)
             //axios.post('http://localhost:8080/buscarTweets', objetoUsuario)
                 .then((res) => {
-                    console.log(JSON.stringify(res.data))
-                    this.setState({ tweets: res.data })
+                    this.contadorPalabrasViolentas(res.data);
+                    this.contadorTweetsNegativos(res.data);
+                    this.setState({ tweets: res.data });
                 }).catch((error) => {
                 this.setState({ modalError: true, mensajeError: error })
                 console.log(error)
@@ -122,6 +162,43 @@ class Buscador extends Component {
         } else {
             this.setState({ tweets: [] })
         }
+    }
+
+    contadorPalabrasViolentas = (tweets) => {
+        let countBadWords = 0;
+        let countUndefined = 0;
+        const temporal = tweets.map((tweet) => { if (tweet !== null) return tweet });
+        temporal.forEach((tweet) => {
+            if (tweet !== undefined) {
+                const tweetSinAcentos = (tweet.msg.toLowerCase()).normalize('NFD').replace(/([^n\u0300-\u036f]|n(?!\u0303(?![\u0300-\u036f])))[\u0300-\u036f]+/gi,"$1").normalize();
+                for(let indice = 0; indice < palabrasViolentas.length; indice++) {
+                    if(tweetSinAcentos.includes(palabrasViolentas[indice])) {
+                        countBadWords ++;
+                    }
+                }
+            } else {
+                countUndefined ++;
+            }
+        });
+        this.setState({ numPalabras: countBadWords });
+    }
+
+    contadorTweetsNegativos = (tweets) => {
+        let countNegativeTweets = 0;
+        let countPositiveTweets = 0;
+        let countNull = 0;
+        tweets.forEach((tweet) => {
+            if (tweet !== null) {
+                if (tweet.classification.tag_name === 'negativo') {
+                    countNegativeTweets ++;
+                } else {
+                    countPositiveTweets ++;
+                }
+            } else {
+                countNull ++;
+            }
+        });
+        this.setState({ tweetsNegativos: countNegativeTweets, tweetsPositivos: countPositiveTweets });
     }
 
     /* buscarTweets = () => {
@@ -200,7 +277,10 @@ class Buscador extends Component {
             tweets,
             nombreUsuario,
             twitterUser,
-        } = this.state
+            numPalabras,
+            tweetsNegativos,
+            tweetsPositivos,
+        } = this.state;
         return (
             <div className={styles.contenedorAnalisis}>
                 <Row className={styles.buttonRegresar}>
@@ -254,6 +334,17 @@ class Buscador extends Component {
                         </Row>
                     </Col>
                     <Col className={styles.columnaGrafica}>
+                        {
+                            (numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
+                            <RadarChart
+                                numPalabras={ numPalabras }
+                                numTweetsNegativos={ tweetsNegativos }
+                                numTweetsPositivos={ tweetsPositivos }
+                                retweets={120}
+                                favorites={26}
+                            /> : null
+                            
+                        }
                     </Col>
                 </Row>
             </div>
