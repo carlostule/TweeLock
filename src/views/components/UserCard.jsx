@@ -100,7 +100,6 @@ class UserCard extends Component {
             name,
             nickname,
             location,
-            followers,
             violento,
         } = this.props;
         const { fechaInicio } = this.state;
@@ -124,6 +123,10 @@ class UserCard extends Component {
                     <Row>
                         <Col>Inicio</Col>
                         <Col>{fechaInicio !== '' ? fechaInicio : 'Sin fecha'}</Col>
+                    </Row>
+                    <Row>
+                        <Col>¿El usuario es violento?</Col>
+                        <Col>{violento}</Col>
                     </Row>
                 </Col>
             </div>

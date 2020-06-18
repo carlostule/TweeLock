@@ -315,6 +315,20 @@ class Buscador extends Component {
             contadorRetweets,
             contadorFavorites,
         } = this.state;
+        let violenta = '';
+
+        if (tweets !== null) {
+            if (tweetsNegativos > tweetsPositivos) {
+                violenta = '¡El usuario es altamente violento en sus publicaciones!';
+            } else if (tweetsNegativos === tweetsPositivos) {
+                violenta = 'El usuario es violento en sus publicaciones';
+            } else if (tweetsNegativos < tweetsPositivos && tweetsNegativos > 0) {
+                violenta = 'El usuario es poco violento en sus publicaciones';
+            } else if (tweetsNegativos === 0){
+                violenta = 'El usuario no es violento en sus publicaciones';
+            }
+        }
+
         return (
             <div className={styles.contenedorAnalisis}>
                 <Row className={styles.buttonRegresar}>
@@ -335,6 +349,7 @@ class Buscador extends Component {
                         location={twitterUser.location}
                         followers={twitterUser.followers_count}
                         startDate={twitterUser.created_at}
+                        violento={violenta}
                     />
                 </div>
                 <Row className={styles.columnaAnalisis}>
