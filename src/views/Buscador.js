@@ -2,7 +2,9 @@ import React, { Component } from 'react';
 import { Row, Col, Button, Modal, Form, Table, Spinner } from 'react-bootstrap';
 import axios from 'axios';
 import UserCard from '../views/components/UserCard';
-import RadarChart from '../views/components/RadarChart';
+import BarChart from './components/BarChart';
+import ColumnChart from './components/ColumnChart';
+import RadialChart from './components/RadialChart';
 
 import 'react-tagsinput/react-tagsinput.css';
 import styles from '../css/Buscador.module.css';
@@ -101,6 +103,10 @@ class Buscador extends Component {
             numPalabras: 0,
             tweetsNegativos: 0,
             tweetsPositivos: 0,
+            datosPalabras: [],
+            categoriasPalabras: [],
+            contadorRetweets: 0,
+            contadorFavorites: 0,
         }
     }
 
@@ -167,6 +173,11 @@ class Buscador extends Component {
     contadorPalabrasViolentas = (tweets) => {
         let countBadWords = 0;
         let countUndefined = 0;
+        let palabrasUsadas = [];
+        let cantidadPorPalabra = [];
+        let countPorPalabra = 0;
+        let sumaRetweets = 0;
+        let sumaFavorites = 0;
         const temporal = tweets.map((tweet) => { if (tweet !== null) return tweet });
         temporal.forEach((tweet) => {
             if (tweet !== undefined) {
@@ -174,13 +185,32 @@ class Buscador extends Component {
                 for(let indice = 0; indice < palabrasViolentas.length; indice++) {
                     if(tweetSinAcentos.includes(palabrasViolentas[indice])) {
                         countBadWords ++;
+                        palabrasUsadas.push(palabrasViolentas[indice]);
                     }
                 }
+                sumaRetweets = sumaRetweets + tweet.retweet;
+                sumaFavorites = sumaFavorites + tweet.favorite;
             } else {
                 countUndefined ++;
             }
         });
-        this.setState({ numPalabras: countBadWords });
+        const categorias = Array.from(new Set(palabrasUsadas));
+        categorias.forEach((categoria) => {
+            for (let palabra = 0; palabra < palabrasUsadas.length; palabra ++) {
+                if (palabrasUsadas[palabra] === categoria) {
+                    countPorPalabra++;
+                } 
+            }
+            cantidadPorPalabra.push(countPorPalabra);
+            countPorPalabra = 0;
+        });
+        this.setState({
+            numPalabras: countBadWords,
+            categoriasPalabras: categorias,
+            datosPalabras: cantidadPorPalabra,
+            contadorRetweets: sumaRetweets,
+            contadorFavorites: sumaFavorites,
+        });
     }
 
     contadorTweetsNegativos = (tweets) => {
@@ -280,6 +310,10 @@ class Buscador extends Component {
             numPalabras,
             tweetsNegativos,
             tweetsPositivos,
+            datosPalabras,
+            categoriasPalabras,
+            contadorRetweets,
+            contadorFavorites,
         } = this.state;
         return (
             <div className={styles.contenedorAnalisis}>
@@ -336,12 +370,27 @@ class Buscador extends Component {
                     <Col className={styles.columnaGrafica}>
                         {
                             (numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
-                            <RadarChart
+                            <BarChart
                                 numPalabras={ numPalabras }
                                 numTweetsNegativos={ tweetsNegativos }
                                 numTweetsPositivos={ tweetsPositivos }
-                                retweets={120}
-                                favorites={26}
+                            /> : null
+                            
+                        }
+                        {
+                            (numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
+                            <ColumnChart
+                                datos={ datosPalabras }
+                                categorias={ categoriasPalabras }
+                            /> : null
+                            
+                        }
+                        {
+                            (numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0 && contadorRetweets > 0) ?
+                            <RadialChart
+                                retweets={ contadorRetweets }
+                                followers={ twitterUser.followers_count }
+                                favorites={ contadorFavorites }
                             /> : null
                             
                         }

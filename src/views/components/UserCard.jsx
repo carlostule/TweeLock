@@ -122,10 +122,6 @@ class UserCard extends Component {
                 </Col>
                 <Col className={styles.columnaDatos2}>
                     <Row>
-                        <Col>Seguidores</Col>
-                        <Col>{followers}</Col>
-                    </Row>
-                    <Row>
                         <Col>Inicio</Col>
                         <Col>{fechaInicio !== '' ? fechaInicio : 'Sin fecha'}</Col>
                     </Row>

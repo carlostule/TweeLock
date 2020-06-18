@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import ReactChart from 'react-apexcharts';
 
-class RadarChart extends Component {
+class BarChart extends Component {
     constructor(props) {
         super(props);
 
         this.state = {
             series: [{
-                name: 'Porcentaje',
+                name: 'Cantidad',
                 data: [],
             }],
             options: {
@@ -24,7 +24,7 @@ class RadarChart extends Component {
                     enabled: false
                 },
                 title: {
-                    text: 'Análisis de tweets'
+                    text: 'Clasificación de tweets'
                 },
                 xaxis: {
                     categories: ['Palabras Violentas', 'Tweets negativos', 'Tweets positivos'],
@@ -38,8 +38,6 @@ class RadarChart extends Component {
             numPalabras,
             numTweetsNegativos,
             numTweetsPositivos,
-            retweets,
-            favorites,
         } = this.props;
 
         const data = [numPalabras, numTweetsNegativos, numTweetsPositivos];
@@ -63,4 +61,4 @@ class RadarChart extends Component {
 
 }
 
-export default RadarChart;
+export default BarChart;
