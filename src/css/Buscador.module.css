@@ -15,6 +15,14 @@
     border: 0px solid black;
 }
 
+.contenedorPdf {
+    display: flex;
+    flex: 1;
+    margin: 0;
+    flex-direction: column;
+    background-color: gray;
+}
+
 .containerPS {
     display: flex;
     flex: 1;
@@ -23,6 +31,17 @@
     padding: 17%;
     justify-content: center;
     align-items: center;
+}
+
+.contenedorPagina {
+    height: 1792px;
+    width: 612px;
+    padding: 8%;
+    background-color: white;
+    box-shadow: 5px 5px 5px black;
+    margin: auto;
+    overflow-x: hidden;
+    overflow-y: hidden;
 }
 
 .header {
@@ -229,4 +248,39 @@ p.tituloAnalisis {
 
 .contenedorTarjetaUsuario {
     background: white;
+}
+
+.rowBasicData {
+    display: flex;
+    flex: 1;
+    flex-direction: row;
+    border: 1px solid #DA2F47;
+    border-radius: 5px;
+    padding: 2%;
+}
+
+.rowTitleData {
+    display: flex;
+    flex: 1;
+    flex-direction: row;
+    border-bottom: 1px solid #DA2F47;
+    align-items: center;
+    justify-content: center;
+}
+
+.seccionPagina {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.parrafo {
+    font-size: 12px;
+    font-style: italic;
+}
+
+.clasificacion {
+    font-size: 16px;
+    color: #DA2F47;
+    font-style: bold;
+    text-align: center;
 }

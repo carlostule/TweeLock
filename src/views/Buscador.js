@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import { Row, Col, Button, Modal, Form, Table, Spinner } from 'react-bootstrap';
 import axios from 'axios';
+import { PDFExport } from '@progress/kendo-react-pdf';
+
 import UserCard from '../views/components/UserCard';
-import BarChart from './components/BarChart';
+import Barchart from './components/BarChart';
 import ColumnChart from './components/ColumnChart';
 import RadialChart from './components/RadialChart';
 
@@ -18,6 +20,7 @@ const TITULO_MODAL = 'BUSCADOR TWEELOCK';
 const CUERPO_MODAL = 'Necesitas introducir el nombre de un usuario que quieras buscar.';
 const TITULO_ERROR_MODAL = 'ERROR TWEELOCK';
 const TITULO_BUSQUEDA_PREVIA = 'Búsquedas previas';
+const PDF_VIEWER = 'Vista previa reporte';
 
 const filtroLocation = [
     'México',
@@ -107,6 +110,7 @@ class Buscador extends Component {
             categoriasPalabras: [],
             contadorRetweets: 0,
             contadorFavorites: 0,
+            vistaPdf: false,
         }
     }
 
@@ -115,7 +119,7 @@ class Buscador extends Component {
     }
 
     handleClose = () => {
-        this.setState({ modalAviso: false, modalError: false, mensajeError: '' })
+        this.setState({ modalAviso: false, modalError: false, mensajeError: '', vistaPdf: false })
     }
 
     handleRegresar = () => {
@@ -168,7 +172,7 @@ class Buscador extends Component {
         } else {
             this.setState({ tweets: [] })
         }
-    }
+    }   
 
     contadorPalabrasViolentas = (tweets) => {
         let countBadWords = 0;
@@ -229,6 +233,10 @@ class Buscador extends Component {
             }
         });
         this.setState({ tweetsNegativos: countNegativeTweets, tweetsPositivos: countPositiveTweets });
+    }
+
+    exportPDF = () => {
+        this.resume.save();
     }
 
     /* buscarTweets = () => {
@@ -302,6 +310,147 @@ class Buscador extends Component {
         }
     }
 
+    handlePdfView = () => {
+        this.setState({ vistaPdf: true });
+    }
+
+    pdfView = () => {
+        const {
+            nombreUsuario,
+            twitterUser,
+            tweetsNegativos,
+            tweetsPositivos,
+            numPalabras,
+            categoriasPalabras,
+            tweets,
+        } = this.state;
+        let palabras = '';
+        let violenta = '';
+
+        for(let indice = 0; indice < categoriasPalabras.length; indice++) {
+            palabras = palabras + `${categoriasPalabras[indice]}, `;
+        }
+
+        if (tweetsNegativos > tweetsPositivos) {
+            violenta = '¡El usuario es altamente violento en sus publicaciones!';
+        } else if (tweetsNegativos === tweetsPositivos) {
+            violenta = 'El usuario es violento en sus publicaciones';
+        } else if (tweetsNegativos < tweetsPositivos && tweetsNegativos > 0) {
+            violenta = 'El usuario es poco violento en sus publicaciones';
+        } else if (tweetsNegativos === 0){
+            violenta = 'El usuario no es violento en sus publicaciones';
+        }
+
+        console.log(localStorage.getItem('barChart'));
+
+        return(
+            <div className={styles.contenedorPdf}>
+            <button onClick={this.exportPDF}>download</button>
+            <PDFExport
+                paperSize={'Letter'}
+                fileName={`Análisis violencia ${nombreUsuario}.pdf`}
+                title={`Análisis violencia ${nombreUsuario}`}
+                subject=""
+                keywords=""
+                ref={(r) => this.resume = r}
+            >   
+                <div className={styles.contenedorPagina}>
+                    <Row className={styles.rowBasicData}>
+                        <Col>
+                         <Row className={styles.rowTitleData}>
+                            <p className={styles.seccionPagina}>Datos basicos del usuario</p>
+                         </Row>
+                         <Row>
+                            <Table striped bordered>
+                                <thead>
+                                    <tr>
+                                        <td>Usuario</td>
+                                        <td>Localizacion</td>
+                                        <td>Fecha de creacion</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>{nombreUsuario}</td>
+                                        <td>{twitterUser.location}</td>
+                                        <td>{localStorage.getItem('fechaNormal')}</td>
+                                    </tr>
+                                </tbody>
+                            </Table>
+                         </Row>
+                        </Col>
+                    </Row>
+                    <Row className={styles.rowBasicData}>
+                        <Col>
+                         <Row className={styles.rowTitleData}>
+                            <p className={styles.seccionPagina}>Resumen</p>
+                         </Row>
+                         <Row>
+                            <p className={styles.parrafo}>
+                                {
+                                    `El siguiente reporte se ha creado con base en el analisis que se realizo al usuario ${nombreUsuario},
+                                     de los 20 tweets recopilados de su cuenta de Twitter, se obtuvo que ${tweetsNegativos} son textos negativos y 
+                                     ${tweetsPositivos} son textos positivos. Tambien dentro de los textos negativos el usuario ocupo ${numPalabras}
+                                      palabras violentas, las cuales fueron ${palabras}por lo tanto la clasificacion que se le asigna es la siguiente: `
+                                }
+                            </p>
+                            <p className={styles.clasificacion}>
+                                {violenta}
+                            </p>
+                         </Row>
+                        </Col>
+                    </Row>
+                    <Row className={styles.rowBasicData}>
+                        <Col>
+                         <Row className={styles.rowTitleData}>
+                            <p className={styles.seccionPagina}>Lista de tweets negativos</p>
+                         </Row>
+                         <Row>
+                            <Table striped bordered size="sm">
+                                <thead>
+                                    <tr>
+                                        <td>Id</td>
+                                        <td>Texto</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {
+                                       (tweets !== null && tweets.length === 0) ? null :
+                                        tweets.map((tweet) => {
+                                            if (tweet === null) {
+                                                return null;
+                                            } else if(tweet.classification.tag_name === 'positivo') {
+                                                return null;
+                                            }
+                                            return(
+                                                <tr>
+                                                    <td>{tweet.tweetId}</td>
+                                                    <td>{tweet.msg}</td>
+                                                </tr>
+                                            )
+                                        })
+                                    }
+                                </tbody>
+                            </Table>
+                         </Row>
+                        </Col>
+                    </Row>
+                    <Row className={styles.rowBasicData}>
+                        <Col>
+                         <Row className={styles.rowTitleData}>
+                            <p className={styles.seccionPagina}>Graficas</p>
+                         </Row>
+                         <Row>
+                            
+                         </Row>
+                        </Col>
+                    </Row>
+                </div>
+            </PDFExport>
+            </div>
+        );
+    }
+
     analyticsView = () => {
         const {
             tweets,
@@ -339,7 +488,7 @@ class Buscador extends Component {
                      <Button variant="primary" onClick={this.handleRegresar}>Regresar</Button>
                     </Col>
                     <Col sm={2} className={styles.columnaBotonRegresar}>
-                     <Button variant="danger">Guardar en PDF</Button>
+                     <Button variant="danger" onClick={this.handlePdfView}>Vista previa PDF</Button>
                     </Col>
                 </Row>
                 <div className={styles.contenedorTarjetaUsuario}>
@@ -385,7 +534,7 @@ class Buscador extends Component {
                     <Col className={styles.columnaGrafica}>
                         {
                             (numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
-                            <BarChart
+                            <Barchart
                                 numPalabras={ numPalabras }
                                 numTweetsNegativos={ tweetsNegativos }
                                 numTweetsPositivos={ tweetsPositivos }
@@ -412,7 +561,7 @@ class Buscador extends Component {
                     </Col>
                 </Row>
             </div>
-        )
+        );
     }
 
     usersTable = () => {
@@ -470,6 +619,7 @@ class Buscador extends Component {
             modalBusquedaPrevia,
             busquedasPrevias,
             ocultarFooter,
+            vistaPdf,
         } = this.state;
         return(
             <div className={styles.container}>
@@ -502,6 +652,16 @@ class Buscador extends Component {
                         </Row>
                     ) : null
                 }
+                <Modal show={vistaPdf} onHide={this.handleClose} size="lg">
+                    <Modal.Header closeButton>
+                    <Modal.Title>{PDF_VIEWER}</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {   
+                            this.pdfView()
+                        }
+                    </Modal.Body>
+                </Modal>
                 <Modal show={modalAviso} onHide={this.handleClose}>
                     <Modal.Header closeButton>
                     <Modal.Title>{TITULO_MODAL}</Modal.Title>

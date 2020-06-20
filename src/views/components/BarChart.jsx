@@ -31,6 +31,8 @@ class BarChart extends Component {
                 },
             },
         };
+
+        this.barchart = React.createRef();
     }
 
     componentWillMount() {

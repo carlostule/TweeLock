@@ -103,6 +103,7 @@ class UserCard extends Component {
             violento,
         } = this.props;
         const { fechaInicio } = this.state;
+        localStorage.setItem('fechaNormal', fechaInicio);
         return(
             <div className={styles.containerCard}>
                 <Col className={styles.columnaDatos1}>
