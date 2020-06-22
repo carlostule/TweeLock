@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import ReactChart from 'react-apexcharts';
 
+
 class BarChart extends Component {
     constructor(props) {
         super(props);
@@ -14,6 +15,7 @@ class BarChart extends Component {
                 chart: {
                     height: 350,
                     type: 'bar',
+                    id: 'basic-bar',
                 },
                 plotOptions: {
                     bar: {
@@ -32,7 +34,7 @@ class BarChart extends Component {
             },
         };
 
-        this.barchart = React.createRef();
+        this.barRef = React.createRef();
     }
 
     componentWillMount() {

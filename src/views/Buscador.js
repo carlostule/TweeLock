@@ -1,20 +1,24 @@
-import React, { Component } from 'react';
+/* eslint-disable no-unexpected-multiline */
+/* eslint-disable no-undef */
+import React, { Component, Fragment } from 'react';
 import { Row, Col, Button, Modal, Form, Table, Spinner } from 'react-bootstrap';
 import axios from 'axios';
+import { exportImage } from '@progress/kendo-drawing';
 import { PDFExport } from '@progress/kendo-react-pdf';
 
 import UserCard from '../views/components/UserCard';
 import Barchart from './components/BarChart';
 import ColumnChart from './components/ColumnChart';
 import RadialChart from './components/RadialChart';
+import ScreenCapture from './components/ScreenCapture'
 
 import 'react-tagsinput/react-tagsinput.css';
 import styles from '../css/Buscador.module.css';
-
+import '../css/ScreenCapture.css';
 
 import tweelock from '../images/Tweelock.svg';
-import analisis from '../images/Analisis.svg';
 import botonLogo from '../images/LogoBotonDesplegado.svg';
+import logo from '../images/icono.png';
 
 const TITULO_MODAL = 'BUSCADOR TWEELOCK';
 const CUERPO_MODAL = 'Necesitas introducir el nombre de un usuario que quieras buscar.';
@@ -111,7 +115,15 @@ class Buscador extends Component {
             contadorRetweets: 0,
             contadorFavorites: 0,
             vistaPdf: false,
+            tempCapture1: '',
+            tempCapture2: '',
+            screenCapture1: '',
+            screenCapture2: '',
+            screenCapture3: '',
+            sinGraficas: true,
         }
+
+        this.chartBar = React.createRef();
     }
 
     handleChange = (event) => {
@@ -124,6 +136,27 @@ class Buscador extends Component {
 
     handleRegresar = () => {
         this.setState({ vistaAnalisis: false, vistaBusquedaPrevia: true, usuario: '', ocultarFooter: false });
+    }
+
+    handleScreenCapture1 = (screenCapture) => {
+        this.setState({
+            screenCapture1: screenCapture,
+            tempCapture1: screenCapture,
+            sinGraficas: false,
+        })
+    }
+
+    handleScreenCapture2 = (screenCapture) => {
+        this.setState({
+            screenCapture2: screenCapture,
+            tempCapture2: screenCapture,
+        })
+    }
+
+    handleScreenCapture3 = (screenCapture) => {
+        this.setState({
+            screenCapture3: screenCapture,
+        })
     }
 
     handleModalBusquedasPrevias = () => {
@@ -237,6 +270,7 @@ class Buscador extends Component {
 
     exportPDF = () => {
         this.resume.save();
+        this.setState({ screenCapture1: '', screenCapture2: '', screenCapture3: '' });
     }
 
     /* buscarTweets = () => {
@@ -314,6 +348,14 @@ class Buscador extends Component {
         this.setState({ vistaPdf: true });
     }
 
+    stopCapture = () => {
+        this.setState({
+            screenCapture1: '',
+            screenCapture2: '',
+            screenCapture3: '',
+        });
+    }
+
     pdfView = () => {
         const {
             nombreUsuario,
@@ -323,10 +365,15 @@ class Buscador extends Component {
             numPalabras,
             categoriasPalabras,
             tweets,
+            screenCapture1,
+            screenCapture2,
+            screenCapture3,
+            tempCapture1,
+            tempCapture2,
+            sinGraficas,
         } = this.state;
         let palabras = '';
         let violenta = '';
-
         for(let indice = 0; indice < categoriasPalabras.length; indice++) {
             palabras = palabras + `${categoriasPalabras[indice]}, `;
         }
@@ -340,8 +387,6 @@ class Buscador extends Component {
         } else if (tweetsNegativos === 0){
             violenta = 'El usuario no es violento en sus publicaciones';
         }
-
-        console.log(localStorage.getItem('barChart'));
 
         return(
             <div className={styles.contenedorPdf}>
@@ -357,6 +402,14 @@ class Buscador extends Component {
                 <div className={styles.contenedorPagina}>
                     <Row className={styles.rowBasicData}>
                         <Col>
+                        <Row className={styles.rowTitleData}>
+                            <Col className={styles.logoReporte}>
+                             <img src={logo} alt="LogoTweelock" width={50} height={50} />
+                            </Col>
+                            <Col className={styles.tituloReporte}>
+                                <p className={styles.seccionPagina}>Reporte generado por Tweelock</p>
+                            </Col>
+                         </Row>
                          <Row className={styles.rowTitleData}>
                             <p className={styles.seccionPagina}>Datos basicos del usuario</p>
                          </Row>
@@ -383,7 +436,7 @@ class Buscador extends Component {
                     <Row className={styles.rowBasicData}>
                         <Col>
                          <Row className={styles.rowTitleData}>
-                            <p className={styles.seccionPagina}>Resumen</p>
+                            <p className={styles.seccionPagina}>Datos del analisis</p>
                          </Row>
                          <Row>
                             <p className={styles.parrafo}>
@@ -437,18 +490,150 @@ class Buscador extends Component {
                     </Row>
                     <Row className={styles.rowBasicData}>
                         <Col>
-                         <Row className={styles.rowTitleData}>
-                            <p className={styles.seccionPagina}>Graficas</p>
-                         </Row>
-                         <Row>
-                            
-                         </Row>
+                        {
+                            sinGraficas ? null : (
+                                <Row className={styles.rowTitleData}>
+                                    <p className={styles.seccionPagina}>Graficas</p>
+                                </Row>
+                            )
+                        }
+                         {
+                             screenCapture1 === '' && screenCapture2 === '' && screenCapture3 === '' && tempCapture1 === '' && tempCapture2 === '' ?
+                             (<p>Para visualizar las graficas del usuario primero debe de realizar una captura de las graficas que requiere en su reporte, si no necesita ninguna puede descargar el pdf como esta actualmente.</p>)
+                             :
+                             (
+                             <>
+                                <Row style={{ alignItems: 'center', marginTop: '4%' }}>
+                                    <p className={styles.seccionPagina}>Analisis en la clasificacion de tweets</p>
+                                </Row>
+                                <Row>
+                                    {
+                                        screenCapture1 !== '' ?
+                                        <img src={screenCapture1} alt="Grafica 1" width={550} height={350}/>
+                                        : tempCapture1 !== '' ?
+                                            <img src={tempCapture1} alt="Grafica 1" width={550} height={350}/>
+                                            :
+                                            null
+                                    }
+                                </Row>
+                                <Row style={{ alignItems: 'center', marginTop: '4%' }}>
+                                    <p className={styles.seccionPagina}>Analisis de la palabra mas usada</p>
+                                </Row>
+                                <Row >
+                                    {
+                                        screenCapture2 !== '' ?
+                                        <img src={screenCapture2} alt="Grafica 2" width={550} height={350}/>
+                                        : tempCapture2 !== '' ?
+                                            <img src={tempCapture2} alt="Grafica 2" width={550} height={350}/>
+                                            :
+                                            null
+                                    }
+                                </Row>
+                                <Row style={{ alignItems: 'center', marginTop: '4%' }}>
+                                    <p className={styles.seccionPagina}>Analisis sobre la cuenta de twitter</p>
+                                </Row>
+                                <Row>
+                                    {
+                                        screenCapture3 !== '' ?
+                                            <img src={screenCapture3} alt="Grafica 3" width={550} height={350}/> : null
+                                    }
+                                </Row>
+                             </>
+                             )
+                         }
                         </Col>
                     </Row>
                 </div>
             </PDFExport>
             </div>
         );
+    }
+
+    captureZone = (ss1, ss2, ss3) => {
+        const {
+            numPalabras,
+            tweetsNegativos,
+            tweetsPositivos,
+            datosPalabras,
+            categoriasPalabras,
+            contadorRetweets,
+            twitterUser,
+            contadorFavorites,
+        } = this.state;
+        if(ss1 !== '' && ss2 !== '' && ss3 !== '') {
+            return(
+                <div style={{ overflow: 'auto', border: '0px solid', height: '350px' }}>
+                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
+                    <Barchart
+                        ref={(cmp) => this.chartBar = cmp}
+                        numPalabras={ numPalabras }
+                        numTweetsNegativos={ tweetsNegativos }
+                        numTweetsPositivos={ tweetsPositivos }
+                    /> : null}
+                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
+                    <ColumnChart
+                        datos={ datosPalabras }
+                        categorias={ categoriasPalabras }
+                    /> : null}
+                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0 && contadorRetweets > 0) ?
+                    <RadialChart
+                        retweets={ contadorRetweets }
+                        followers={ twitterUser.followers_count }
+                        favorites={ contadorFavorites }
+                    /> : null}
+                </div>
+            );
+        } else if (ss1 !== '' && ss2 !== '' && ss3 === '') {
+            return (
+                <div style={{ overflow: 'auto', border: '0px solid', height: '350px' }}>
+                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0 && contadorRetweets > 0) ?
+                    <RadialChart
+                        retweets={ contadorRetweets }
+                        followers={ twitterUser.followers_count }
+                        favorites={ contadorFavorites }
+                    /> : null}
+                </div>
+            );
+        } else if (ss1 !== '' && ss2 === '' && ss3 === '') {
+            return(
+                <div style={{ overflow: 'auto', border: '0px solid', height: '350px' }}>
+                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
+                    <ColumnChart
+                        datos={ datosPalabras }
+                        categorias={ categoriasPalabras }
+                    /> : null}
+                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0 && contadorRetweets > 0) ?
+                    <RadialChart
+                        retweets={ contadorRetweets }
+                        followers={ twitterUser.followers_count }
+                        favorites={ contadorFavorites }
+                    /> : null}
+                </div>
+            );
+        } else {
+            return (
+                <div style={{ overflow: 'auto', border: '0px solid', height: '350px' }}>
+                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
+                    <Barchart
+                        ref={(cmp) => this.chartBar = cmp}
+                        numPalabras={ numPalabras }
+                        numTweetsNegativos={ tweetsNegativos }
+                        numTweetsPositivos={ tweetsPositivos }
+                    /> : null}
+                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
+                    <ColumnChart
+                        datos={ datosPalabras }
+                        categorias={ categoriasPalabras }
+                    /> : null}
+                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0 && contadorRetweets > 0) ?
+                    <RadialChart
+                        retweets={ contadorRetweets }
+                        followers={ twitterUser.followers_count }
+                        favorites={ contadorFavorites }
+                    /> : null}
+                </div>
+            );
+        }
     }
 
     analyticsView = () => {
@@ -463,6 +648,9 @@ class Buscador extends Component {
             categoriasPalabras,
             contadorRetweets,
             contadorFavorites,
+            screenCapture1,
+            screenCapture2,
+            screenCapture3,
         } = this.state;
         let violenta = '';
 
@@ -532,32 +720,25 @@ class Buscador extends Component {
                         </Row>
                     </Col>
                     <Col className={styles.columnaGrafica}>
-                        {
-                            (numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
-                            <Barchart
-                                numPalabras={ numPalabras }
-                                numTweetsNegativos={ tweetsNegativos }
-                                numTweetsPositivos={ tweetsPositivos }
-                            /> : null
-                            
-                        }
-                        {
-                            (numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
-                            <ColumnChart
-                                datos={ datosPalabras }
-                                categorias={ categoriasPalabras }
-                            /> : null
-                            
-                        }
-                        {
-                            (numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0 && contadorRetweets > 0) ?
-                            <RadialChart
-                                retweets={ contadorRetweets }
-                                followers={ twitterUser.followers_count }
-                                favorites={ contadorFavorites }
-                            /> : null
-                            
-                        }
+                        <ScreenCapture onEndCapture={(screenCapture1 !== '') ? (screenCapture2 !== '') ? this.handleScreenCapture3 : this.handleScreenCapture2 : this.handleScreenCapture1}>
+                        {({ onStartCapture }) => (
+                            <Fragment>
+                                <Row className={styles.rowButton1}>
+                                {
+                                    (screenCapture1 !== '' && screenCapture2 !== '' && screenCapture3 === '') ?
+                                    null : (screenCapture1 === '' && screenCapture2 === '' && screenCapture3 === '') ? <Button variant="danger" onClick={this.stopCapture}>Parar de capturar</Button>
+                                     : <Button variant="danger" onClick={this.stopCapture}>Parar de capturar</Button>
+                                }
+                                </Row>
+                                <Row className={styles.rowButton1}>
+                                    <Button variant="danger" onClick={onStartCapture}>Capturar Gráfica</Button>
+                                </Row>
+                                {
+                                    this.captureZone(screenCapture1, screenCapture2, screenCapture3)
+                                }
+                            </Fragment>
+                        )}
+                        </ScreenCapture>
                     </Col>
                 </Row>
             </div>

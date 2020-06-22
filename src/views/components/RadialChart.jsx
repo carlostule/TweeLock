@@ -11,6 +11,12 @@ class RadialChart extends Component {
               chart: {
                 height: 390,
                 type: 'radialBar',
+                toolbar: {
+                  show: true,
+                  tools: {
+                    download: true,
+                  },
+                },
               },
               plotOptions: {
                 radialBar: {
