@@ -1,0 +1,20 @@
+{
+  "files": {
+    "main.css": "/TweeLock/static/css/main.cad5c151.chunk.css",
+    "main.js": "/TweeLock/static/js/main.0103df47.chunk.js",
+    "main.js.map": "/TweeLock/static/js/main.0103df47.chunk.js.map",
+    "runtime~main.js": "/TweeLock/static/js/runtime~main.e8c0dfc8.js",
+    "runtime~main.js.map": "/TweeLock/static/js/runtime~main.e8c0dfc8.js.map",
+    "static/css/2.ba8163e8.chunk.css": "/TweeLock/static/css/2.ba8163e8.chunk.css",
+    "static/js/2.df0941e7.chunk.js": "/TweeLock/static/js/2.df0941e7.chunk.js",
+    "static/js/2.df0941e7.chunk.js.map": "/TweeLock/static/js/2.df0941e7.chunk.js.map",
+    "index.html": "/TweeLock/index.html",
+    "precache-manifest.432535e4886342428910b19dd56651f1.js": "/TweeLock/precache-manifest.432535e4886342428910b19dd56651f1.js",
+    "service-worker.js": "/TweeLock/service-worker.js",
+    "static/css/2.ba8163e8.chunk.css.map": "/TweeLock/static/css/2.ba8163e8.chunk.css.map",
+    "static/css/main.cad5c151.chunk.css.map": "/TweeLock/static/css/main.cad5c151.chunk.css.map",
+    "static/media/LogoBotonDesplegado.svg": "/TweeLock/static/media/LogoBotonDesplegado.22b2251c.svg",
+    "static/media/Tweelock.svg": "/TweeLock/static/media/Tweelock.7709580a.svg",
+    "static/media/logo.svg": "/TweeLock/static/media/logo.7860ee4c.svg"
+  }
+}
