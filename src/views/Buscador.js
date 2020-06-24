@@ -32,30 +32,49 @@ const FALLA_DESCARGA = 'GENERANDO PDF';
 const ERROR_DESCARGA = 'Se esta generando el PDF, cierre el modal para que se descargue.';
 
 const filtroLocation = [
-    'México',
-    'Mexico',
-    'méxico',
     'mexico',
-    'D.F.',
-    'd.f.',
-    'D.f.',
-    'DF',
-    'Df',
-    'df',
-    'CDMX',
+    'en tus sueños mojados',
     'cdmx',
-    'Ciudad de México',
-    'Ciudad de méxico',
-    'Ciudad de Mexico',
-    'Ciudad de mexico',
-    'ciudad de mèxico',
-    'Distrito Federal',
+    'ciudad de mexico',
+    'mexico d.f.',
+    'mexico df',
+    'd.f.',
+    'df',
     'distrito federal',
-    'Distrito federal',
-    'Coacalco',
-    'coacalco',
-    'Ecatepec',
+    'mexico, distrito federal',
+    'mexico distrito federal',
     'ecatepec',
+    'coacalco de berriozabal',
+    'coacalco',
+    'tultepec',
+    'tultitlan',
+    'tlalnepantla de baz',
+    'tlalnepantla',
+    'estado de mexico',
+    'edomex',
+    'puebla',
+    'hidalgo',
+    'veracruz',
+    'oaxaca',
+    'cancun',
+    'yucatan',
+    'monterrey',
+    'nuevo leon',
+    'mty',
+    'cuernavaca',
+    'morelia',
+    'toluca',
+    'tlaxcala',
+    'acapulco',
+    'gdl',
+    'guadalajara jalisco',
+    'guadalajara',
+    'puerto vallarta',
+    'sinaloa',
+    'sonora',
+    'aguascalientes',
+    'zacatecas',
+    'chiapas',
 ];
 
 const palabrasViolentas = [
@@ -74,7 +93,8 @@ const palabrasViolentas = [
     'partir la madre',
     'partir tu madre',
     'putiza',
-    'puta',
+    ' puta ',
+    ' puta',
     'pendejo',
     'pendeja',
     'pinche',
@@ -86,8 +106,10 @@ const palabrasViolentas = [
     'culera',
     'maricon',
     'estupida',
-    'puto',
-    'culo',
+    ' puto ',
+    ' puto',
+    ' culo ',
+    ' culo',
     'bastardo',
     'hija de puta',
     'hijo de puta',
@@ -437,10 +459,10 @@ class Buscador extends Component {
             // axios.post('http://localhost:8080/buscarUsuarios', parametrosJSON)
             .then((res) => {
                 const usuarios = res.data;
-                const arregloTemporal = [];
+                // const arregloTemporal = [];
 
                 if (usuarios.length > 0) {
-                    usuarios.forEach((usuario) => {
+                    /* usuarios.forEach((usuario) => {
                         for (let i = 0; i < filtroLocation.length; i++) {
                             if ((usuario.location).includes(filtroLocation[i])) {
                                 arregloTemporal.push(usuario)
@@ -449,8 +471,8 @@ class Buscador extends Component {
                     })
                     // Quitamos valores duplicados en el arreglo
                     let set = new Set(arregloTemporal.map(JSON.stringify))
-                    const arregloSinDuplicaciones = Array.from(set).map(JSON.parse)
-                    this.setState({ twitterUsers: arregloSinDuplicaciones, loading: false });
+                    const arregloSinDuplicaciones = Array.from(set).map(JSON.parse) */
+                    this.setState({ twitterUsers: usuarios, loading: false });
                 } else {
                     this.setState({ modalSinResultados: true });
                 }
@@ -787,7 +809,7 @@ class Buscador extends Component {
                                     numTweetsNegativos={ tweetsNegativos }
                                     numTweetsPositivos={ tweetsPositivos }
                                 /> : null}
-                            {(numPalabras !== null && tweetsNegativos !== null && tweetsPositivos !== null && !this.state.sinNegativos ) ?
+                            {(numPalabras !== null && numPalabras > 0 && tweetsNegativos !== null && tweetsPositivos !== null && !this.state.sinNegativos ) ?
                             <Box
                                 boxShadow={0}
                                 bgcolor="#ffffff"
