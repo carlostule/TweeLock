@@ -608,7 +608,7 @@ class Buscador extends Component {
                                 fromAnalisisPrevio ? (
                                     <div>
                                         {
-                                            this.state.sinNegativos ? <p className={styles.parrafo}>{`No se detecto ningún tweet negativo en esta cuenta de Twitter.`}</p> :
+                                            this.state.sinNegativos ? <p className={styles.parrafo}>{`No se detecto ningún texto negativo en la parte de tweets analizados.`}</p> :
                                                 (tweets !== null && tweets.length === 0 ) ? null :
                                                     tweets.map((tweet) => {
                                                         if (tweet === null) {
@@ -626,7 +626,7 @@ class Buscador extends Component {
                                 ) : (
                                     <div>
                                         {
-                                        this.state.sinNegativos ? <p className={styles.parrafo}>{`No se detecto ningún tweet negativo en esta cuenta de Twitter.`}</p> :
+                                        this.state.sinNegativos ? <p className={styles.parrafo}>{`No se detecto ningún texto negativo en la parte de tweets analizados.`}</p> :
                                         (tweets !== null && tweets.length === 0) ? null :
                                             tweets.map((tweet) => {
                                                 if (tweet === null) {
