@@ -62,6 +62,7 @@ const palabrasViolentas = [
     'chinga tu madre',
     'chinguen a su madre',
     'chingue a su madre',
+    'chingada madre',
     'hasta la madre',
     'emputado',
     'emputada',
@@ -84,7 +85,6 @@ const palabrasViolentas = [
     'culero',
     'culera',
     'maricon',
-    'alv',
     'estupida',
     'puto',
     'culo',
@@ -115,9 +115,9 @@ class Buscador extends Component {
             usuarioPrevio: {},
             vistaUsuarioPrevio: false,
             ocultarFooter: false,
-            numPalabras: 0,
-            tweetsNegativos: 0,
-            tweetsPositivos: 0,
+            numPalabras: null,
+            tweetsNegativos: null,
+            tweetsPositivos: null,
             datosPalabras: [],
             categoriasPalabras: [],
             contadorRetweets: 0,
@@ -136,6 +136,7 @@ class Buscador extends Component {
             parametroFecha: '',
             modalSinResultados: false,
             loadingPrevia: false,
+            sinNegativos: false,
         }
 
         this.chartBar = React.createRef();
@@ -185,6 +186,7 @@ class Buscador extends Component {
             ocultarFooter: false,
             parametroFecha: '',
             loadingPrevia: false,
+            sinNegativos: false,
         });
     }
 
@@ -303,7 +305,7 @@ class Buscador extends Component {
             }
 
             axios.post('https://tweelock-api.azurewebsites.net/buscarTweets', objetoUsuario)
-            //axios.post('http://localhost:8080/buscarTweets', objetoUsuario)
+            // axios.post('http://localhost:8080/buscarTweets', objetoUsuario)
                 .then((res) => {
                     this.contadorPalabrasViolentas(res.data);
                     this.contadorTweetsNegativos(res.data);
@@ -375,7 +377,12 @@ class Buscador extends Component {
                 countNull ++;
             }
         });
-        this.setState({ tweetsNegativos: countNegativeTweets, tweetsPositivos: countPositiveTweets });
+
+        if(countNegativeTweets === 0) {
+            this.setState({ sinNegativos: true, numPalabras: 0, tweetsNegativos: 0, tweetsPositivos: countPositiveTweets });
+        } else {
+            this.setState({ tweetsNegativos: countNegativeTweets, tweetsPositivos: countPositiveTweets });
+        }
     }
 
     contadorTweetsNegativosPrevios = (tweets) => {
@@ -393,7 +400,12 @@ class Buscador extends Component {
                 countNull ++;
             }
         });
-        this.setState({ tweetsNegativos: countNegativeTweets, tweetsPositivos: countPositiveTweets });
+
+        if(countNegativeTweets === 0) {
+            this.setState({ sinNegativos: true, numPalabras: 0, tweetsNegativos: 0, tweetsPositivos: countPositiveTweets });
+        } else {
+            this.setState({ tweetsNegativos: countNegativeTweets, tweetsPositivos: countPositiveTweets });
+        }
     }
 
     exportarReportePDF = () => {
@@ -422,41 +434,6 @@ class Buscador extends Component {
             this.setState({ retry: true });
         }
     } 
-
-    /* buscarTweets = () => {
-        const { tags } = this.state
-        let hashtaguno = tags[0]
-        let hashtagdos = tags[1]
-        /* Reemplazar simbolo # por el codigo correcto para la url %23 
-        if (hashtaguno !== undefined && hashtaguno.includes('#')) {
-            hashtaguno = tags[0].replace('#', '%23')
-        }
-
-        if (hashtagdos !== undefined && hashtagdos.includes('#')) {
-            hashtagdos = tags[1].replace('#', '%23')
-        }
-
-        if (tags.length === 0) {
-            this.setState({ modalAviso: true })
-        } else if (tags.length === 1) { // El usuario escribe una palabra
-            axios.get(`http://localhost:8000/oneTweet/${hashtaguno}`)
-                .then((response) => {
-                    console.log(response.data.statuses)
-                    this.setState({ tweets: response.data.statuses })
-                }).catch((error) => {
-                    // this.setState({ modalError: true, mensajeError: error })
-                    console.log(error)
-                })
-        } else { // El usuario escribe dos palabras
-            axios.get(`http://localhost:8000/twoTweets/${hashtaguno}&${hashtagdos}`)
-                .then((response) => {
-                    console.log(response.data.statuses)
-                }).catch((error) => {
-                    // this.setState({ modalError: true, mensajeError: error })
-                    console.log(error)
-                })
-        }
-    } */
 
     buscarUsuarios = () => {
         const { usuario } = this.state;
@@ -613,8 +590,13 @@ class Buscador extends Component {
                          <Row>
                             <p className={styles.parrafo}>
                                 {
+                                    this.state.sinNegativos ?
                                     `El siguiente reporte se ha creado con base en el análisis que se realizó al usuario ${nombreUsuario},
-                                     de los 20 tweets recopilados de su cuenta de Twitter, se obtuvo que ${tweetsNegativos} son textos negativos y 
+                                    de los ${tweetsPositivos} tweets recopilados de su cuenta de Twitter, se obtuvo que ${tweetsNegativos} son textos negativos y 
+                                    ${tweetsPositivos} son textos positivos. Por lo tanto la clasificación que se le asigna es la siguiente: `
+                                     :
+                                    `El siguiente reporte se ha creado con base en el análisis que se realizó al usuario ${nombreUsuario},
+                                     de los ${tweetsPositivos + tweetsNegativos} tweets recopilados de su cuenta de Twitter, se obtuvo que ${tweetsNegativos} son textos negativos y 
                                      ${tweetsPositivos} son textos positivos. También dentro de los textos negativos el usuario ocupo ${numPalabras}
                                       palabras violentas, las cuales fueron ${palabras}por lo tanto la clasificación que se le asigna es la siguiente: `
                                 }
@@ -640,32 +622,36 @@ class Buscador extends Component {
                                 fromAnalisisPrevio ? (
                                     <div>
                                         {
-                                        (tweets !== null && tweets.length === 0) ? null :
-                                            tweets.map((tweet) => {
-                                                if (tweet === null) {
-                                                    return null;
-                                                } else if(tweet.clasificacion === 'positivo') {
-                                                    return null;
-                                                }
-                                                return(
-                                                    <p className={styles.parrafo}>{`${indice = indice + 1}. ${tweet.msg}`}</p>
-                                                )
-                                            })
+                                            this.state.sinNegativos ? <p className={styles.parrafo}>{`No se detecto ningún tweet negativo en esta cuenta de Twitter.`}</p> :
+                                                (tweets !== null && tweets.length === 0 ) ? null :
+                                                    tweets.map((tweet) => {
+                                                        if (tweet === null) {
+                                                            return null;
+                                                        } else if(tweet.clasificacion === 'positivo') {
+                                                            return null;
+                                                        } else if(tweet.clasificacion === 'negativos') {
+                                                            return(
+                                                                <p className={styles.parrafo}>{`• ${tweet.msg}`}</p>
+                                                            )
+                                                        }
+                                                    })
                                         }
                                     </div>
                                 ) : (
                                     <div>
                                         {
+                                        this.state.sinNegativos ? <p className={styles.parrafo}>{`No se detecto ningún tweet negativo en esta cuenta de Twitter.`}</p> :
                                         (tweets !== null && tweets.length === 0) ? null :
                                             tweets.map((tweet) => {
                                                 if (tweet === null) {
                                                     return null;
                                                 } else if(tweet.classification.tag_name === 'positivo') {
                                                     return null;
+                                                } else if(tweet.classification.tag_name === 'negativos') {
+                                                    return(
+                                                        <p className={styles.parrafo}>{`• ${tweet.msg}`}</p>
+                                                    )
                                                 }
-                                                return(
-                                                    <p className={styles.parrafo}>{`${indice + 1}. ${tweet.msg}`}</p>
-                                                )
                                             })
                                         }
                                     </div>
@@ -808,27 +794,27 @@ class Buscador extends Component {
                             <p>Estadísticas de tweets</p>
                         </Row>
                         <div id="graficas">
-                            {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
+                            {(numPalabras !== null && tweetsNegativos !== null && tweetsPositivos !== null) ?
                                 <Barchart
                                     ref={(cmp) => this.chartBar = cmp}
                                     numPalabras={ numPalabras }
                                     numTweetsNegativos={ tweetsNegativos }
                                     numTweetsPositivos={ tweetsPositivos }
                                 /> : null}
-                            {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
+                            {(numPalabras !== null && tweetsNegativos !== null && tweetsPositivos !== null && !this.state.sinNegativos ) ?
                             <Box
                                 boxShadow={0}
                                 bgcolor="#ffffff"
                                 m={1}
                                 p={1}
                                 style={{ width: '550px', height: '250px' }}
-                            >
+                            > 
                                 <ColumnChart
                                     datos={ datosPalabras }
                                     categorias={ categoriasPalabras }
                                 /> 
                             </Box>: null}
-                            {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0 && contadorRetweets > 0) ?
+                            {(numPalabras !== null && tweetsNegativos !== null && tweetsPositivos !== null) ?
                             <Box
                                 boxShadow={0}
                                 bgcolor="#ffffff"
@@ -872,7 +858,7 @@ class Buscador extends Component {
                                             <td>{user.name}</td>
                                             <td>{user.screen_name}</td>
                                             <td>{user.location}</td>
-                                            <td><Button variant="primary" onClick={() => this.handleAnalisis(user.name, user.screen_name, 50)}>Ver análisis</Button></td>
+                                            <td><Button variant="primary" onClick={() => this.handleAnalisis(user.name, user.screen_name, 20)}>Ver análisis</Button></td>
                                         </tr>
                                     )
                                 })
