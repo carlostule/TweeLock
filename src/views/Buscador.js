@@ -134,6 +134,8 @@ class Buscador extends Component {
             modalNoHayBusqueda: false,
             parametroUsuario: '',
             parametroFecha: '',
+            modalSinResultados: false,
+            loadingPrevia: false,
         }
 
         this.chartBar = React.createRef();
@@ -153,7 +155,17 @@ class Buscador extends Component {
             vistaPdf: false,
             noHayAnalisis: false,
             vistaUsuarioPrevio: false,
-            retry: false
+            retry: false,
+        });
+    }
+
+    handleVolverAbuscar = () => {
+        this.setState({
+            modalSinResultados: false,
+            loading: false,
+            usuario: '',
+            vistaBusquedaPrevia: true,
+            loadingPrevia: false,
         });
     }
 
@@ -172,6 +184,7 @@ class Buscador extends Component {
             usuario: '',
             ocultarFooter: false,
             parametroFecha: '',
+            loadingPrevia: false,
         });
     }
 
@@ -451,7 +464,7 @@ class Buscador extends Component {
             username: usuario,
             count: 20,
         }
-        this.setState({ parametroUsuario: usuario });
+        this.setState({ parametroUsuario: usuario, loadingPrevia: true });
 
         if (usuario === '') {
             this.setState({ modalAviso: true })
@@ -460,20 +473,24 @@ class Buscador extends Component {
             axios.post('https://tweelock-api.azurewebsites.net/buscarUsuarios', parametrosJSON)
             // axios.post('http://localhost:8080/buscarUsuarios', parametrosJSON)
             .then((res) => {
-                const usuarios = res.data
-                const arregloTemporal = []
+                const usuarios = res.data;
+                const arregloTemporal = [];
 
-                usuarios.forEach((usuario) => {
-                    for (let i = 0; i < filtroLocation.length; i++) {
-                        if ((usuario.location).includes(filtroLocation[i])) {
-                            arregloTemporal.push(usuario)
+                if (usuarios.length > 0) {
+                    usuarios.forEach((usuario) => {
+                        for (let i = 0; i < filtroLocation.length; i++) {
+                            if ((usuario.location).includes(filtroLocation[i])) {
+                                arregloTemporal.push(usuario)
+                            }
                         }
-                    }
-                })
-                // Quitamos valores duplicados en el arreglo
-                let set = new Set(arregloTemporal.map(JSON.stringify))
-                const arregloSinDuplicaciones = Array.from(set).map(JSON.parse)
-                this.setState({ twitterUsers: arregloSinDuplicaciones, loading: false });
+                    })
+                    // Quitamos valores duplicados en el arreglo
+                    let set = new Set(arregloTemporal.map(JSON.stringify))
+                    const arregloSinDuplicaciones = Array.from(set).map(JSON.parse)
+                    this.setState({ twitterUsers: arregloSinDuplicaciones, loading: false });
+                } else {
+                    this.setState({ modalSinResultados: true });
+                }
             }).catch((error) => {
                 this.setState({ modalError: true, mensajeError: error });
                 console.log(error);
@@ -895,6 +912,8 @@ class Buscador extends Component {
             retry,
             loadingBusquedaPrevia,
             datosPalabras,
+            modalSinResultados,
+            loadingPrevia,
         } = this.state;
         return(
             <div className={styles.container}>
@@ -908,6 +927,9 @@ class Buscador extends Component {
                     <Col className={styles.columnaBoton}>
                         {
                             loading ? <Spinner animation="grow" variant="light" /> : <Button variant="dark" onClick={this.buscarUsuarios}>Buscar</Button>
+                        }
+                        {
+                            loadingPrevia ? <Button variant="danger" onClick={this.handleModalBusquedasPrevias}>Busquedas previas</Button> : null
                         }
                     </Col>
                 </Row>
@@ -959,6 +981,14 @@ class Buscador extends Component {
                     </Modal.Header>
                     <Modal.Body>
                         No existen búsquedas previas, realice una nueva búsqueda.
+                    </Modal.Body>
+                </Modal>
+                <Modal show={modalSinResultados} onHide={this.handleVolverAbuscar}>
+                    <Modal.Header closeButton>
+                    <Modal.Title>BUSCADOR TWEELOCK</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        No hay resultados para la búsqueda que realizaste.
                     </Modal.Body>
                 </Modal>
                 <Modal show={modalAviso} onHide={this.handleClose}>
