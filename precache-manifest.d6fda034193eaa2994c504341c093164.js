@@ -1,23 +1,23 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "bbd6c939d0d1d489e482c86350144816",
+    "revision": "6810e977fe124d63355a445b7bf9c5d1",
     "url": "/TweeLock/index.html"
   },
   {
-    "revision": "c5a3edc551e5a1e5cda1",
+    "revision": "5a56669f0277a54dea9d",
     "url": "/TweeLock/static/css/2.ba8163e8.chunk.css"
   },
   {
-    "revision": "e9e1f7f3adf3c3228f0e",
-    "url": "/TweeLock/static/css/main.cad5c151.chunk.css"
+    "revision": "7f55681acce488f3231c",
+    "url": "/TweeLock/static/css/main.04367131.chunk.css"
   },
   {
-    "revision": "c5a3edc551e5a1e5cda1",
-    "url": "/TweeLock/static/js/2.df0941e7.chunk.js"
+    "revision": "5a56669f0277a54dea9d",
+    "url": "/TweeLock/static/js/2.cde30e7a.chunk.js"
   },
   {
-    "revision": "e9e1f7f3adf3c3228f0e",
-    "url": "/TweeLock/static/js/main.0103df47.chunk.js"
+    "revision": "7f55681acce488f3231c",
+    "url": "/TweeLock/static/js/main.5bbf739a.chunk.js"
   },
   {
     "revision": "5ceb49628caec359f9d6",

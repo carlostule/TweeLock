@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/TweeLock/precache-manifest.432535e4886342428910b19dd56651f1.js"
+  "/TweeLock/precache-manifest.d6fda034193eaa2994c504341c093164.js"
 );
 
 self.addEventListener('message', (event) => {
