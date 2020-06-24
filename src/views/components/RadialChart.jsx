@@ -9,13 +9,10 @@ class RadialChart extends Component {
             series: [],
             options: {
               chart: {
-                height: 390,
+                height: 420,
                 type: 'radialBar',
                 toolbar: {
-                  show: true,
-                  tools: {
-                    download: true,
-                  },
+                  show: false,
                 },
               },
               plotOptions: {
@@ -44,9 +41,9 @@ class RadialChart extends Component {
               legend: {
                 show: true,
                 floating: true,
-                fontSize: '16px',
+                fontSize: '14px',
                 position: 'left',
-                offsetX: 100,
+                offsetX: 90,
                 offsetY: 20,
                 labels: {
                   useSeriesColors: true,
@@ -60,6 +57,9 @@ class RadialChart extends Component {
                 itemMargin: {
                   vertical: 3
                 }
+              },
+              title: {
+                text: 'Estadísticas de Twitter',
               },
               responsive: [{
                 breakpoint: 480,
@@ -90,7 +90,7 @@ class RadialChart extends Component {
         } = this.state;
         return(
             <div>
-                <ReactChart options={ options } series={ series } type="radialBar" height={390} />
+                <ReactChart options={ options } series={ series } type="radialBar" height={250} />
             </div>
         );
     }

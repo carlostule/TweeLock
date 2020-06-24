@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import ReactChart from 'react-apexcharts';
+import Box from '@material-ui/core/Box';
 
 
 class BarChart extends Component {
@@ -16,6 +17,9 @@ class BarChart extends Component {
                     height: 350,
                     type: 'bar',
                     id: 'basic-bar',
+                    toolbar: {
+                        show: false,
+                    },
                 },
                 plotOptions: {
                     bar: {
@@ -57,9 +61,15 @@ class BarChart extends Component {
             series,
         } = this.state;
         return(
-            <div>
-                <ReactChart options={options} series={series} type="bar" height={350} />
-            </div>
+            <Box
+                boxShadow={0}
+                bgcolor="#ffffff"
+                m={1}
+                p={1}
+                style={{ width: '550px', height: '250px' }}
+            >
+                <ReactChart options={options} series={series} type="bar" height={250} />
+            </Box>
         );
     }
 

@@ -13,7 +13,10 @@ class ColumnChart extends Component {
             options: {
                 chart: {
                   height: 350,
-                  type: 'bar',  
+                  type: 'bar',
+                  toolbar: {
+                    show: false,
+                  },  
                 },
                 plotOptions: {
                     bar: {
@@ -94,7 +97,7 @@ class ColumnChart extends Component {
         } = this.state;
         return(
             <div>
-                <ReactChart options={ options } series={ series } type="bar" height={ 350 }/>
+                <ReactChart options={ options } series={ series } type="bar" height={ 250 }/>
             </div>
         );
     }

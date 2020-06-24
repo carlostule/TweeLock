@@ -1,10 +1,12 @@
 /* eslint-disable no-unexpected-multiline */
 /* eslint-disable no-undef */
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import { Row, Col, Button, Modal, Form, Table, Spinner } from 'react-bootstrap';
 import axios from 'axios';
-import { exportImage } from '@progress/kendo-drawing';
-import { PDFExport } from '@progress/kendo-react-pdf';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import Box from '@material-ui/core/Box';
+
 
 import UserCard from '../views/components/UserCard';
 import Barchart from './components/BarChart';
@@ -21,11 +23,13 @@ import botonLogo from '../images/LogoBotonDesplegado.svg';
 import logo from '../images/icono.png';
 
 const TITULO_MODAL = 'BUSCADOR TWEELOCK';
-const CUERPO_MODAL = 'Necesitas introducir el nombre de un usuario que quieras buscar.';
+let CUERPO_MODAL = 'Necesitas introducir el nombre de un usuario que quieras buscar.';
 const TITULO_ERROR_MODAL = 'ERROR TWEELOCK';
 const TITULO_BUSQUEDA_PREVIA = 'Búsquedas previas';
 const PDF_VIEWER = 'Vista previa reporte';
 const NO_HAY_ANALISIS = 'No existe aún un análisis para este usuario';
+const FALLA_DESCARGA = 'GENERANDO PDF';
+const ERROR_DESCARGA = 'Se esta generando el PDF, cierre el modal para que se descargue.';
 
 const filtroLocation = [
     'México',
@@ -119,14 +123,17 @@ class Buscador extends Component {
             contadorRetweets: 0,
             contadorFavorites: 0,
             vistaPdf: false,
-            tempCapture1: '',
-            tempCapture2: '',
-            screenCapture1: '',
-            screenCapture2: '',
-            screenCapture3: '',
-            sinGraficas: true,
             noHayAnalisis: false,
             fromAnalisisPrevio: false,
+            imgData: null,
+            imgGraficas: null,
+            retry: false,
+            loadingBusquedaPrevia: false,
+            loadingTable: false,
+            loadingGraficas: false,
+            modalNoHayBusqueda: false,
+            parametroUsuario: '',
+            parametroFecha: '',
         }
 
         this.chartBar = React.createRef();
@@ -137,11 +144,35 @@ class Buscador extends Component {
     }
 
     handleClose = () => {
-        this.setState({ modalAviso: false, modalError: false, mensajeError: '', vistaPdf: false, noHayAnalisis: false, vistaUsuarioPrevio: false })
+        this.setState({
+            modalNoHayBusqueda: false,
+            modalBusquedaPrevia: false,
+            modalAviso: false,
+            modalError: false,
+            mensajeError: '',
+            vistaPdf: false,
+            noHayAnalisis: false,
+            vistaUsuarioPrevio: false,
+            retry: false
+        });
+    }
+
+    handleCloseDownload = () => {
+        this.setState({
+            retry: false
+        });
+
+        this.exportarReportePDF();
     }
 
     handleRegresar = () => {
-        this.setState({ vistaAnalisis: false, vistaBusquedaPrevia: true, usuario: '', ocultarFooter: false });
+        this.setState({
+            vistaAnalisis: false,
+            vistaBusquedaPrevia: true,
+            usuario: '',
+            ocultarFooter: false,
+            parametroFecha: '',
+        });
     }
 
     handleScreenCapture1 = (screenCapture) => {
@@ -166,13 +197,20 @@ class Buscador extends Component {
     }
 
     handleModalBusquedasPrevias = () => {
+        this.setState({ loadingBusquedaPrevia: true });
         const { modalBusquedaPrevia } = this.state;
         // const url = 'http://localhost:8080/busquedasPrevias';
         const url = 'https://tweelock-api.azurewebsites.net/busquedasPrevias';
 
         axios.get(url).then((res) => {
-            console.log(JSON.stringify(res.data));
-            this.setState({ busquedasPrevias: res.data });
+            if (res.data.length === 0) {
+                this.setState({ modalNoHayBusqueda: true });
+            } else {
+                this.setState({
+                    busquedasPrevias: res.data,
+                    loadingBusquedaPrevia: false,
+                });
+            }
         }).catch((error) => {
             this.setState({ modalError: true, mensajeError: error });
             console.log(error);
@@ -181,8 +219,13 @@ class Buscador extends Component {
         this.setState({ modalBusquedaPrevia: !modalBusquedaPrevia });
     }
 
-    handleUsuariosPrevios = (id) => {
+    handleUsuariosPrevios = (id, usuarioABuscar, fechaBusqueda) => {
         const url = `https://tweelock-api.azurewebsites.net/usuariosPrevios?idBusqueda=${id}`;
+
+        this.setState({
+            parametroUsuario: usuarioABuscar,
+            parametroFecha: fechaBusqueda,
+        });
 
         axios.get(url).then((res) => {
             console.log(JSON.stringify(res.data));
@@ -199,7 +242,7 @@ class Buscador extends Component {
     analisisPrevios = (userId, name, screenName) => {
         const url = `https://tweelock-api.azurewebsites.net/tweetsPrevios?idUsuario=${userId}`;
         const { usuariosPrevios } = this.state;
-        this.setState({ fromAnalisisPrevio: true, vistaAnalisis: true, vistaBusquedaPrevia: false});
+        this.setState({ fromAnalisisPrevio: true, vistaAnalisis: true, vistaBusquedaPrevia: false, loadingTable: true, loadingGraficas: true});
 
         usuariosPrevios.forEach((user) => {
             if (screenName === user.screenName) {
@@ -219,6 +262,8 @@ class Buscador extends Component {
                     modalBusquedaPrevia: false,
                     ocultarFooter: true,
                     nombreUsuario: name,
+                    loadingTable: false,
+                    loadingGraficas: false,
                 });
             }
         }).catch((error) => {
@@ -229,7 +274,7 @@ class Buscador extends Component {
 
     handleAnalisis = (name, screen_name, count) => {
         const { twitterUsers } = this.state;
-        this.setState({ vistaAnalisis: true, ocultarFooter: true });
+        this.setState({ vistaAnalisis: true, ocultarFooter: true, loadingTable: true, loadingGraficas: true });
         
         twitterUsers.forEach((user) => {
             if (screen_name === user.screen_name) {
@@ -249,7 +294,7 @@ class Buscador extends Component {
                 .then((res) => {
                     this.contadorPalabrasViolentas(res.data);
                     this.contadorTweetsNegativos(res.data);
-                    this.setState({ tweets: res.data });
+                    this.setState({ tweets: res.data, loadingTable: false, loadingGraficas: false });
                 }).catch((error) => {
                 this.setState({ modalError: true, mensajeError: error })
                 console.log(error)
@@ -338,10 +383,32 @@ class Buscador extends Component {
         this.setState({ tweetsNegativos: countNegativeTweets, tweetsPositivos: countPositiveTweets });
     }
 
-    exportPDF = () => {
-        this.resume.save();
-        this.setState({ screenCapture1: '', screenCapture2: '', screenCapture3: '' });
-    }
+    exportarReportePDF = () => {
+        html2canvas(document.querySelector("#reporte")).then(canvas => {
+           //  document.body.appendChild(canvas);  // if you want see your screenshot in body.
+            this.setState({ imgData: canvas.toDataURL('image/png') });
+        });
+
+        html2canvas(document.querySelector("#graficas")).then(canvas => {
+            // document.body.appendChild(canvas);  // if you want see your screenshot in body.
+            this.setState({ imgGraficas: canvas.toDataURL('image/png') });
+        });
+
+        const {
+            imgData,
+            imgGraficas,
+        } = this.state;
+
+        if (this.state.imgData !== null && this.state.imgGraficas !== null) {
+             const pdf = new jsPDF('p', 'mm', 'a4');
+             pdf.addImage(imgData, 'PNG', 0, 0);
+             pdf.addPage();
+             pdf.addImage(imgGraficas, 'PNG', 0, 0);
+             pdf.save("reporte.pdf");
+        } else {
+            this.setState({ retry: true });
+        }
+    } 
 
     /* buscarTweets = () => {
         const { tags } = this.state
@@ -379,12 +446,12 @@ class Buscador extends Component {
     } */
 
     buscarUsuarios = () => {
-        const { usuario } = this.state
+        const { usuario } = this.state;
         const parametrosJSON = {
             username: usuario,
             count: 20,
         }
-        console.log(parametrosJSON);
+        this.setState({ parametroUsuario: usuario });
 
         if (usuario === '') {
             this.setState({ modalAviso: true })
@@ -422,15 +489,15 @@ class Buscador extends Component {
         this.setState({ vistaPdf: true });
     }
 
-    stopCapture = () => {
-        this.setState({
-            screenCapture1: '',
-            screenCapture2: '',
-            screenCapture3: '',
-        });
+    addZero = (num) => {
+        if (num < 10) {
+            num = `0${num}`;
+        }
+    
+        return num;
     }
 
-    pdfView = () => {
+    pdfView = (datosPalabras) => {
         const {
             nombreUsuario,
             twitterUser,
@@ -439,16 +506,18 @@ class Buscador extends Component {
             numPalabras,
             categoriasPalabras,
             tweets,
-            screenCapture1,
-            screenCapture2,
-            screenCapture3,
-            tempCapture1,
-            tempCapture2,
-            sinGraficas,
             fromAnalisisPrevio,
+            parametroUsuario,
+            parametroFecha,
+            contadorFavorites,
+            contadorRetweets,
         } = this.state;
         let palabras = '';
         let violenta = '';
+        let indice = 0;
+        const follower = fromAnalisisPrevio ? twitterUser.followers : twitterUser.followers_count;
+        const fechaActual = new Date();
+        const fechaHoy = `${fechaActual.getFullYear()}-${this.addZero(fechaActual.getMonth()+1)}-${this.addZero(fechaActual.getDate())}`;
         for(let indice = 0; indice < categoriasPalabras.length; indice++) {
             palabras = palabras + `${categoriasPalabras[indice]}, `;
         }
@@ -465,16 +534,8 @@ class Buscador extends Component {
 
         return(
             <div className={styles.contenedorPdf}>
-            <button onClick={this.exportPDF}>download</button>
-            <PDFExport
-                paperSize={'Letter'}
-                fileName={`Análisis violencia ${nombreUsuario}.pdf`}
-                title={`Análisis violencia ${nombreUsuario}`}
-                subject=""
-                keywords=""
-                ref={(r) => this.resume = r}
-            >   
-                <div className={styles.contenedorPagina}>
+            <Button variant="primary" onClick={this.exportarReportePDF}>download</Button>
+                <div id="reporte" className={styles.contenedorPagina}>
                     <Row className={styles.rowBasicData}>
                         <Col>
                         <Row className={styles.rowTitleData}>
@@ -482,8 +543,27 @@ class Buscador extends Component {
                              <img src={logo} alt="LogoTweelock" width={50} height={50} />
                             </Col>
                             <Col className={styles.tituloReporte}>
-                                <p className={styles.seccionPagina}>Reporte generado por Tweelock</p>
+                                <p className={styles.seccionPagina}>Reporte Tweelock</p>
                             </Col>
+                         </Row>
+                         <Row className={styles.rowTitleData}>
+                            <p className={styles.seccionPagina}>Datos de búsqueda</p>
+                         </Row>
+                         <Row>
+                            <Table striped bordered>
+                                <thead>
+                                    <tr>
+                                        <td>Fecha de búsqueda</td>
+                                        <td>Nombre introducido</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>{(parametroFecha !== '') ? parametroFecha : fechaHoy}</td>
+                                        <td>{parametroUsuario}</td>
+                                    </tr>
+                                </tbody>
+                            </Table>
                          </Row>
                          <Row className={styles.rowTitleData}>
                             <p className={styles.seccionPagina}>Datos basicos del usuario</p>
@@ -511,17 +591,22 @@ class Buscador extends Component {
                     <Row className={styles.rowBasicData}>
                         <Col>
                          <Row className={styles.rowTitleData}>
-                            <p className={styles.seccionPagina}>Datos del analisis</p>
+                            <p className={styles.seccionPagina}>Análisis</p>
                          </Row>
                          <Row>
                             <p className={styles.parrafo}>
                                 {
-                                    `El siguiente reporte se ha creado con base en el analisis que se realizo al usuario ${nombreUsuario},
+                                    `El siguiente reporte se ha creado con base en el análisis que se realizó al usuario ${nombreUsuario},
                                      de los 20 tweets recopilados de su cuenta de Twitter, se obtuvo que ${tweetsNegativos} son textos negativos y 
-                                     ${tweetsPositivos} son textos positivos. Tambien dentro de los textos negativos el usuario ocupo ${numPalabras}
-                                      palabras violentas, las cuales fueron ${palabras}por lo tanto la clasificacion que se le asigna es la siguiente: `
+                                     ${tweetsPositivos} son textos positivos. También dentro de los textos negativos el usuario ocupo ${numPalabras}
+                                      palabras violentas, las cuales fueron ${palabras}por lo tanto la clasificación que se le asigna es la siguiente: `
                                 }
                             </p>
+                         </Row>
+                         <Row className={styles.rowTitleData}>
+                            <p className={styles.seccionPagina}>Clasificación</p>
+                         </Row>
+                         <Row>
                             <p className={styles.clasificacion}>
                                 {violenta}
                             </p>
@@ -534,212 +619,53 @@ class Buscador extends Component {
                             <p className={styles.seccionPagina}>Lista de tweets negativos</p>
                          </Row>
                          <Row>
-                            <Table striped bordered size="sm">
-                                <thead>
-                                    <tr>
-                                        <td>Id</td>
-                                        <td>Texto</td>
-                                    </tr>
-                                </thead>
-                                {
-                                    fromAnalisisPrevio ? (
-                                        <tbody>
-                                            {
-                                            (tweets !== null && tweets.length === 0) ? null :
-                                                tweets.map((tweet) => {
-                                                    if (tweet === null) {
-                                                        return null;
-                                                    } else if(tweet.clasificacion === 'positivo') {
-                                                        return null;
-                                                    }
-                                                    return(
-                                                        <tr>
-                                                            <td>{tweet.idTweets}</td>
-                                                            <td>{tweet.msg}</td>
-                                                        </tr>
-                                                    )
-                                                })
-                                            }
-                                        </tbody>
-                                    ) : (
-                                        <tbody>
-                                            {
-                                            (tweets !== null && tweets.length === 0) ? null :
-                                                tweets.map((tweet) => {
-                                                    if (tweet === null) {
-                                                        return null;
-                                                    } else if(tweet.classification.tag_name === 'positivo') {
-                                                        return null;
-                                                    }
-                                                    return(
-                                                        <tr>
-                                                            <td>{tweet.tweetId}</td>
-                                                            <td>{tweet.msg}</td>
-                                                        </tr>
-                                                    )
-                                                })
-                                            }
-                                        </tbody>
-                                    )
-                                }
-                            </Table>
+                            {
+                                fromAnalisisPrevio ? (
+                                    <div>
+                                        {
+                                        (tweets !== null && tweets.length === 0) ? null :
+                                            tweets.map((tweet) => {
+                                                if (tweet === null) {
+                                                    return null;
+                                                } else if(tweet.clasificacion === 'positivo') {
+                                                    return null;
+                                                }
+                                                return(
+                                                    <p className={styles.parrafo}>{`${indice = indice + 1}. ${tweet.msg}`}</p>
+                                                )
+                                            })
+                                        }
+                                    </div>
+                                ) : (
+                                    <div>
+                                        {
+                                        (tweets !== null && tweets.length === 0) ? null :
+                                            tweets.map((tweet) => {
+                                                if (tweet === null) {
+                                                    return null;
+                                                } else if(tweet.classification.tag_name === 'positivo') {
+                                                    return null;
+                                                }
+                                                return(
+                                                    <p className={styles.parrafo}>{`${indice + 1}. ${tweet.msg}`}</p>
+                                                )
+                                            })
+                                        }
+                                    </div>
+                                )
+                            }
                          </Row>
                         </Col>
                     </Row>
-                    <Row className={styles.rowBasicData}>
-                        <Col>
-                        {
-                            sinGraficas ? null : (
-                                <Row className={styles.rowTitleData}>
-                                    <p className={styles.seccionPagina}>Graficas</p>
-                                </Row>
-                            )
-                        }
-                         {
-                             screenCapture1 === '' && screenCapture2 === '' && screenCapture3 === '' && tempCapture1 === '' && tempCapture2 === '' ?
-                             (<p>Para visualizar las graficas del usuario primero debe de realizar una captura de las graficas que requiere en su reporte, si no necesita ninguna puede descargar el pdf como esta actualmente.</p>)
-                             :
-                             (
-                             <>
-                                <Row style={{ alignItems: 'center', marginTop: '4%' }}>
-                                    <p className={styles.seccionPagina}>Analisis en la clasificacion de tweets</p>
-                                </Row>
-                                <Row>
-                                    {
-                                        screenCapture1 !== '' ?
-                                        <img src={screenCapture1} alt="Grafica 1" width={550} height={350}/>
-                                        : tempCapture1 !== '' ?
-                                            <img src={tempCapture1} alt="Grafica 1" width={550} height={350}/>
-                                            :
-                                            null
-                                    }
-                                </Row>
-                                <Row style={{ alignItems: 'center', marginTop: '4%' }}>
-                                    <p className={styles.seccionPagina}>Analisis de la palabra mas usada</p>
-                                </Row>
-                                <Row >
-                                    {
-                                        screenCapture2 !== '' ?
-                                        <img src={screenCapture2} alt="Grafica 2" width={550} height={350}/>
-                                        : tempCapture2 !== '' ?
-                                            <img src={tempCapture2} alt="Grafica 2" width={550} height={350}/>
-                                            :
-                                            null
-                                    }
-                                </Row>
-                                <Row style={{ alignItems: 'center', marginTop: '4%' }}>
-                                    <p className={styles.seccionPagina}>Analisis sobre la cuenta de twitter</p>
-                                </Row>
-                                <Row>
-                                    {
-                                        screenCapture3 !== '' ?
-                                            <img src={screenCapture3} alt="Grafica 3" width={550} height={350}/> : null
-                                    }
-                                </Row>
-                             </>
-                             )
-                         }
-                        </Col>
-                    </Row>
                 </div>
-            </PDFExport>
+                <p className={styles.seccionPagina}>NOTA: Las gráficas se agregaran automáticamente al documento PDF</p>
             </div>
         );
-    }
-
-    captureZone = (ss1, ss2, ss3) => {
-        const {
-            numPalabras,
-            tweetsNegativos,
-            tweetsPositivos,
-            datosPalabras,
-            categoriasPalabras,
-            contadorRetweets,
-            twitterUser,
-            contadorFavorites,
-            fromAnalisisPrevio,
-        } = this.state;
-        const follower = fromAnalisisPrevio ? twitterUser.followers : twitterUser.followers_count;
-        if(ss1 !== '' && ss2 !== '' && ss3 !== '') {
-            return(
-                <div style={{ overflow: 'auto', border: '0px solid', height: '350px' }}>
-                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
-                    <Barchart
-                        ref={(cmp) => this.chartBar = cmp}
-                        numPalabras={ numPalabras }
-                        numTweetsNegativos={ tweetsNegativos }
-                        numTweetsPositivos={ tweetsPositivos }
-                    /> : null}
-                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
-                    <ColumnChart
-                        datos={ datosPalabras }
-                        categorias={ categoriasPalabras }
-                    /> : null}
-                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0 && contadorRetweets > 0) ?
-                    <RadialChart
-                        retweets={ contadorRetweets }
-                        followers={ follower }
-                        favorites={ contadorFavorites }
-                    /> : null}
-                </div>
-            );
-        } else if (ss1 !== '' && ss2 !== '' && ss3 === '') {
-            return (
-                <div style={{ overflow: 'auto', border: '0px solid', height: '350px' }}>
-                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0 && contadorRetweets > 0) ?
-                    <RadialChart
-                        retweets={ contadorRetweets }
-                        followers={ follower }
-                        favorites={ contadorFavorites }
-                    /> : null}
-                </div>
-            );
-        } else if (ss1 !== '' && ss2 === '' && ss3 === '') {
-            return(
-                <div style={{ overflow: 'auto', border: '0px solid', height: '350px' }}>
-                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
-                    <ColumnChart
-                        datos={ datosPalabras }
-                        categorias={ categoriasPalabras }
-                    /> : null}
-                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0 && contadorRetweets > 0) ?
-                    <RadialChart
-                        retweets={ contadorRetweets }
-                        followers={ follower }
-                        favorites={ contadorFavorites }
-                    /> : null}
-                </div>
-            );
-        } else {
-            return (
-                <div style={{ overflow: 'auto', border: '0px solid', height: '350px' }}>
-                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
-                    <Barchart
-                        ref={(cmp) => this.chartBar = cmp}
-                        numPalabras={ numPalabras }
-                        numTweetsNegativos={ tweetsNegativos }
-                        numTweetsPositivos={ tweetsPositivos }
-                    /> : null}
-                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
-                    <ColumnChart
-                        datos={ datosPalabras }
-                        categorias={ categoriasPalabras }
-                    /> : null}
-                    {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0 && contadorRetweets > 0) ?
-                    <RadialChart
-                        retweets={ contadorRetweets }
-                        followers={ follower }
-                        favorites={ contadorFavorites }
-                    /> : null}
-                </div>
-            );
-        }
     }
 
     analyticsView = () => {
         const {
             tweets,
-            nombreUsuario,
             twitterUser,
             numPalabras,
             tweetsNegativos,
@@ -748,10 +674,8 @@ class Buscador extends Component {
             categoriasPalabras,
             contadorRetweets,
             contadorFavorites,
-            screenCapture1,
-            screenCapture2,
-            screenCapture3,
             fromAnalisisPrevio,
+            loadingTable,
         } = this.state;
         let violenta = '';
 
@@ -766,7 +690,7 @@ class Buscador extends Component {
                 violenta = 'El usuario no es violento en sus publicaciones';
             }
         }
-
+        const follower = fromAnalisisPrevio ? twitterUser.followers : twitterUser.followers_count;
         return (
             <div className={styles.contenedorAnalisis}>
                 <Row className={styles.buttonRegresar}>
@@ -804,75 +728,104 @@ class Buscador extends Component {
                 </div>
                 <Row className={styles.columnaAnalisis}>
                     <Col className={styles.columnaTweets}>
+                        <p>Lista de tweets</p>
                         <Row className={styles.tablaAnalisis}>
-                            <Table striped bordered hover variant="dark">
-                                <thead>
-                                    <tr>
-                                        <td>Tweet id</td>
-                                        <td>Texto</td>
-                                        <td>Clasificación</td>
-                                    </tr>
-                                </thead>
-                                {
-                                    fromAnalisisPrevio ? (
-                                        <tbody>
-                                        {(tweets !== null && tweets.length === 0) ? null :
-                                            tweets.map((tweet) => {
-                                                if (tweet === null) {
-                                                    return null;
-                                                } 
-                                                return(
-                                                    <tr>
-                                                        <td>{tweet.idTweets}</td>
-                                                        <td>{tweet.msg}</td>
-                                                        <td>{tweet.clasificacion}</td>
-                                                    </tr>
-                                                )
-                                            })
+                            {
+                                loadingTable ? (
+                                    <div style={{ display: 'flex', 'flex': 1, alignItems: 'center', justifyContent: 'center' }}>
+                                        <Spinner animation="grow" variant="primary" />
+                                    </div>
+                                ) : (
+                                    <Table striped bordered hover >
+                                        <thead>
+                                            <tr>
+                                                <td>Tweet id</td>
+                                                <td>Texto</td>
+                                                <td>Clasificación</td>
+                                            </tr>
+                                        </thead>
+                                        {
+                                            fromAnalisisPrevio ? (
+                                                <tbody>
+                                                {(tweets !== null && tweets.length === 0) ? null :
+                                                    tweets.map((tweet) => {
+                                                        if (tweet === null) {
+                                                            return null;
+                                                        } 
+                                                        return(
+                                                            <tr>
+                                                                <td>{tweet.idTweets}</td>
+                                                                <td>{tweet.msg}</td>
+                                                                <td>{tweet.clasificacion}</td>
+                                                            </tr>
+                                                        )
+                                                    })
+                                                }
+                                                </tbody>
+                                            ) : (
+                                                <tbody>
+                                                {(tweets !== null && tweets.length === 0) ? null :
+                                                    tweets.map((tweet) => {
+                                                        if (tweet === null) {
+                                                            return null;
+                                                        } 
+                                                        return(
+                                                            <tr>
+                                                                <td>{tweet.tweetId}</td>
+                                                                <td>{tweet.msg}</td>
+                                                                <td>{tweet.classification.tag_name}</td>
+                                                            </tr>
+                                                        )
+                                                    })
+                                                }
+                                                </tbody>
+                                            )
                                         }
-                                        </tbody>
-                                    ) : (
-                                        <tbody>
-                                        {(tweets !== null && tweets.length === 0) ? null :
-                                            tweets.map((tweet) => {
-                                                if (tweet === null) {
-                                                    return null;
-                                                } 
-                                                return(
-                                                    <tr>
-                                                        <td>{tweet.tweetId}</td>
-                                                        <td>{tweet.msg}</td>
-                                                        <td>{tweet.classification.tag_name}</td>
-                                                    </tr>
-                                                )
-                                            })
-                                        }
-                                        </tbody>
-                                    )
-                                }
-                            </Table>
+                                    </Table>
+                                )
+                            }
                         </Row>
                     </Col>
                     <Col className={styles.columnaGrafica}>
-                        <ScreenCapture onEndCapture={(screenCapture1 !== '') ? (screenCapture2 !== '') ? this.handleScreenCapture3 : this.handleScreenCapture2 : this.handleScreenCapture1}>
-                        {({ onStartCapture }) => (
-                            <Fragment>
-                                <Row className={styles.rowButton1}>
-                                {
-                                    (screenCapture1 !== '' && screenCapture2 !== '' && screenCapture3 === '') ?
-                                    null : (screenCapture1 === '' && screenCapture2 === '' && screenCapture3 === '') ? <Button variant="danger" onClick={this.stopCapture}>Parar de capturar</Button>
-                                     : <Button variant="danger" onClick={this.stopCapture}>Parar de capturar</Button>
-                                }
-                                </Row>
-                                <Row className={styles.rowButton1}>
-                                    <Button variant="danger" onClick={onStartCapture}>Capturar Gráfica</Button>
-                                </Row>
-                                {
-                                    this.captureZone(screenCapture1, screenCapture2, screenCapture3)
-                                }
-                            </Fragment>
-                        )}
-                        </ScreenCapture>
+                        <Row>
+                            <p>Estadísticas de tweets</p>
+                        </Row>
+                        <div id="graficas">
+                            {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
+                                <Barchart
+                                    ref={(cmp) => this.chartBar = cmp}
+                                    numPalabras={ numPalabras }
+                                    numTweetsNegativos={ tweetsNegativos }
+                                    numTweetsPositivos={ tweetsPositivos }
+                                /> : null}
+                            {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0) ?
+                            <Box
+                                boxShadow={0}
+                                bgcolor="#ffffff"
+                                m={1}
+                                p={1}
+                                style={{ width: '550px', height: '250px' }}
+                            >
+                                <ColumnChart
+                                    datos={ datosPalabras }
+                                    categorias={ categoriasPalabras }
+                                /> 
+                            </Box>: null}
+                            {(numPalabras > 0 && tweetsNegativos > 0 && tweetsPositivos > 0 && contadorRetweets > 0) ?
+                            <Box
+                                boxShadow={0}
+                                bgcolor="#ffffff"
+                                m={1}
+                                p={1}
+                                style={{ width: '550px', height: '250px' }}
+                            >
+                                <RadialChart
+                                    retweets={ contadorRetweets }
+                                    followers={ follower }
+                                    favorites={ contadorFavorites }
+                                /> 
+                            </Box>: null}
+                        </div>
                     </Col>
                 </Row>
             </div>
@@ -932,12 +885,16 @@ class Buscador extends Component {
             loading,
             vistaBusquedaPrevia,
             modalBusquedaPrevia,
+            modalNoHayBusqueda,
             busquedasPrevias,
             ocultarFooter,
             vistaPdf,
             vistaUsuarioPrevio,
             usuariosPrevios,
             noHayAnalisis,
+            retry,
+            loadingBusquedaPrevia,
+            datosPalabras,
         } = this.state;
         return(
             <div className={styles.container}>
@@ -984,8 +941,24 @@ class Buscador extends Component {
                     </Modal.Header>
                     <Modal.Body>
                         {   
-                            this.pdfView()
+                            this.pdfView(datosPalabras)
                         }
+                    </Modal.Body>
+                </Modal>
+                <Modal show={retry} onHide={this.handleCloseDownload}>
+                    <Modal.Header closeButton>
+                    <Modal.Title>{FALLA_DESCARGA}</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {ERROR_DESCARGA}
+                    </Modal.Body>
+                </Modal>
+                <Modal show={modalNoHayBusqueda} onHide={this.handleClose}>
+                    <Modal.Header closeButton>
+                    <Modal.Title>BUSCADOR TWEELOCK</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        No existen búsquedas previas, realice una nueva búsqueda.
                     </Modal.Body>
                 </Modal>
                 <Modal show={modalAviso} onHide={this.handleClose}>
@@ -1010,6 +983,11 @@ class Buscador extends Component {
                     </Modal.Header>
                     <Modal.Body>
                         {
+                            loadingBusquedaPrevia ? (
+                                <div style={{ display: 'flex', 'flex': 1, alignItems: 'center', justifyContent: 'center' }}>
+                                    <Spinner animation="border" variant="danger" />
+                                </div>
+                            ) : 
                             !vistaUsuarioPrevio ? (
                                 <Table striped bordered hover variant="dark">
                                     <thead>
@@ -1030,7 +1008,7 @@ class Buscador extends Component {
                                                         <td>{busqueda.idBusqueda}</td>
                                                         <td>{busqueda.usuarioABuscar}</td>
                                                         <td>{busqueda.fechaBusqueda}</td>
-                                                        <td><Button variant="primary" onClick={() => this.handleUsuariosPrevios(busqueda.idBusqueda)}>Ver busqueda</Button></td>
+                                                        <td><Button variant="primary" onClick={() => this.handleUsuariosPrevios(busqueda.idBusqueda, busqueda.usuarioABuscar, busqueda.fechaBusqueda)}>Ver busqueda</Button></td>
                                                     </tr>
                                                 )
                                             })

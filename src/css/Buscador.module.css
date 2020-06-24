@@ -18,7 +18,7 @@
 .contenedorPdf {
     display: flex;
     flex: 1;
-    margin: 0;
+    margin-left: 5%;
     flex-direction: column;
     background-color: gray;
 }
@@ -34,11 +34,9 @@
 }
 
 .contenedorPagina {
-    height: 2992px;
-    width: 612px;
-    padding: 8%;
+    height: 1300px;
+    padding-left: 8%;
     background-color: white;
-    box-shadow: 5px 5px 5px black;
     margin: auto;
     overflow-x: hidden;
     overflow-y: hidden;
@@ -171,7 +169,7 @@
 
 .tablaAnalisis {
     flex-direction: row;
-    height: 450px;
+    height: 800px;
     margin-top: 0%;
     margin-right: 0px;
     margin-left: 0px;
