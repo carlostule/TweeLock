@@ -137,6 +137,7 @@ class Buscador extends Component {
             modalSinResultados: false,
             loadingPrevia: false,
             sinNegativos: false,
+            modalGenerandoAnalisis: false,
         }
 
         this.chartBar = React.createRef();
@@ -178,6 +179,10 @@ class Buscador extends Component {
         this.exportarReportePDF();
     }
 
+    handleCloseAnalisisGenerado = () => {
+        this.setState({ modalGenerandoAnalisis: false });
+    }
+
     handleRegresar = () => {
         this.setState({
             vistaAnalisis: false,
@@ -188,27 +193,6 @@ class Buscador extends Component {
             loadingPrevia: false,
             sinNegativos: false,
         });
-    }
-
-    handleScreenCapture1 = (screenCapture) => {
-        this.setState({
-            screenCapture1: screenCapture,
-            tempCapture1: screenCapture,
-            sinGraficas: false,
-        })
-    }
-
-    handleScreenCapture2 = (screenCapture) => {
-        this.setState({
-            screenCapture2: screenCapture,
-            tempCapture2: screenCapture,
-        })
-    }
-
-    handleScreenCapture3 = (screenCapture) => {
-        this.setState({
-            screenCapture3: screenCapture,
-        })
     }
 
     handleModalBusquedasPrevias = () => {
@@ -257,7 +241,7 @@ class Buscador extends Component {
     analisisPrevios = (userId, name, screenName) => {
         const url = `https://tweelock-api.azurewebsites.net/tweetsPrevios?idUsuario=${userId}`;
         const { usuariosPrevios } = this.state;
-        this.setState({ fromAnalisisPrevio: true, vistaAnalisis: true, vistaBusquedaPrevia: false, loadingTable: true, loadingGraficas: true});
+        this.setState({ fromAnalisisPrevio: true, vistaAnalisis: true, vistaBusquedaPrevia: false, loadingTable: true, loadingGraficas: true, modalGenerandoAnalisis: true});
 
         usuariosPrevios.forEach((user) => {
             if (screenName === user.screenName) {
@@ -280,6 +264,7 @@ class Buscador extends Component {
                     loadingTable: false,
                     loadingGraficas: false,
                 });
+                this.handleCloseAnalisisGenerado();
             }
         }).catch((error) => {
             this.setState({ modalError: true, mensajeError: error });
@@ -289,7 +274,7 @@ class Buscador extends Component {
 
     handleAnalisis = (name, screen_name, count) => {
         const { twitterUsers } = this.state;
-        this.setState({ vistaAnalisis: true, ocultarFooter: true, loadingTable: true, loadingGraficas: true });
+        this.setState({ vistaAnalisis: true, ocultarFooter: true, loadingTable: true, loadingGraficas: true, modalGenerandoAnalisis: true });
         
         twitterUsers.forEach((user) => {
             if (screen_name === user.screen_name) {
@@ -310,6 +295,7 @@ class Buscador extends Component {
                     this.contadorPalabrasViolentas(res.data);
                     this.contadorTweetsNegativos(res.data);
                     this.setState({ tweets: res.data, loadingTable: false, loadingGraficas: false });
+                    this.handleCloseAnalisisGenerado();
                 }).catch((error) => {
                 this.setState({ modalError: true, mensajeError: error })
                 console.log(error)
@@ -900,6 +886,7 @@ class Buscador extends Component {
             datosPalabras,
             modalSinResultados,
             loadingPrevia,
+            modalGenerandoAnalisis,
         } = this.state;
         return(
             <div className={styles.container}>
@@ -991,6 +978,16 @@ class Buscador extends Component {
                     </Modal.Header>
                     <Modal.Body>
                         {mensajeError}
+                    </Modal.Body>
+                </Modal>
+                <Modal show={modalGenerandoAnalisis} onHide={this.handleCloseAnalisisGenerado}>
+                    <Modal.Header closeButton>
+                    <Modal.Title>GENERANDO ANÁLISIS</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div style={{ display: 'flex', 'flex': 1, alignItems: 'center', justifyContent: 'center' }}>
+                            <Spinner animation="border" variant="danger" />
+                        </div>
                     </Modal.Body>
                 </Modal>
                 <Modal show={modalBusquedaPrevia} onHide={this.handleModalBusquedasPrevias} size="lg">
