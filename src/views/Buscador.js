@@ -530,7 +530,7 @@ class Buscador extends Component {
             violenta = 'El usuario es violento en sus publicaciones';
         } else if (tweetsNegativos < tweetsPositivos && tweetsNegativos > 0) {
             violenta = 'El usuario es poco violento en sus publicaciones';
-        } else if ((tweetsPositivos - tweetsNegativos <= 2) && tweetsNegativos > 0) {
+        } else if ((tweetsPositivos - tweetsNegativos <= 4 || numPalabras > 15) && tweetsNegativos > 0) {
             violenta = 'El usuario violento en sus publicaciones';
         } else if (tweetsNegativos === 0){
             violenta = 'El usuario no es violento en sus publicaciones';
@@ -699,6 +699,8 @@ class Buscador extends Component {
                 violenta = 'El usuario es violento en sus publicaciones';
             } else if (tweetsNegativos < tweetsPositivos && tweetsNegativos > 0) {
                 violenta = 'El usuario es poco violento en sus publicaciones';
+            } else if ((tweetsPositivos - tweetsNegativos <= 4 || numPalabras > 15) && tweetsNegativos > 0) {
+                violenta = 'El usuario violento en sus publicaciones';
             } else if (tweetsNegativos === 0){
                 violenta = 'El usuario no es violento en sus publicaciones';
             }
